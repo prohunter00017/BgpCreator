@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<!-- FAQ Schema for SEO -->
+{% if faq_schema %}
+<script type="application/ld+json">
+{{ faq_schema | tojson | safe }}
+</script>
+{% endif %}
+
+<!-- SoftwareApplication Schema for SEO (global or per-game override) -->
+{% if software_schema %}
+<script type="application/ld+json">
+{{ software_schema | tojson | safe }}
+</script>
+{% elif software_application_schema %}
+<script type="application/ld+json">
+{{ software_application_schema | tojson | safe }}
+</script>
+{% endif %}
+
+<!-- Breadcrumb Schema for SEO -->
+{% if breadcrumb_schema and breadcrumb_schema.itemListElement %}
+<script type="application/ld+json">
+{{ breadcrumb_schema | tojson | safe }}
+</script>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+
+.frame-wrap{position:relative;border-radius:var(--radius);overflow:hidden;background:var(--surface);border:1px solid #e5e7eb}
+iframe{width:100%;aspect-ratio:16/9;border:0}
+.overlay{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(180deg, rgba(2,6,23,.04), rgba(2,6,23,.08));color:#0b1220;font-weight:600;z-index:3;pointer-events:auto}
+.overlay *{pointer-events:auto}
+.frame-wrap > iframe{position:relative;z-index:1}
+.overlay span{background:#fff;border:1px solid #e5e7eb;padding:.5rem .75rem;border-radius:999px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+
+/* Fullscreen play state */
+body.playing{overflow:hidden}
+.frame-wrap.fullscreen{position:fixed;inset:0;z-index:9999;border-radius:0;border:0}
+.frame-wrap.fullscreen img{filter:blur(18px) saturate(1.05);transform:scale(1.12)}
+.frame-wrap.fullscreen > iframe{width:100%;height:100%;aspect-ratio:auto}
+/* Exit full view control */
+.exit-btn{position:absolute;top:12px;right:12px;z-index:4;border:0;background:rgba(11,18,32,.75);color:#fff;border-radius:10px;padding:.5rem .65rem;font-weight:600;cursor:pointer;display:none}
+.exit-btn:focus-visible{outline:2px solid var(--brand)}
+.frame-wrap.fullscreen .exit-btn{display:inline-flex}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin:1.5rem 0}
+.card{background:var(--surface);border:1px solid #e5e7eb;border-radius:var(--radius);padding:1rem}
+
+details{background:var(--surface);border:1px solid #e5e7eb;border-radius:var(--radius);padding: .75rem 1rem}
+details+details{margin-top:.75rem}
+summary{cursor:pointer;font-weight:600}
+
+#cookie-banner{display:none;position:fixed;left:1rem;right:1rem;bottom:1rem;z-index:50;background:#0b1220;color:#fff;border-radius:12px;padding:1rem;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+#cookie-banner p{margin:0 0 .5rem}
+.btn{display:inline-block;border:1px solid #ffffff33;color:#fff;background:var(--brand);padding:.5rem .75rem;border-radius:8px}
+.btn.secondary{background:transparent}
+/* Larger primary play button without affecting other buttons */
+#play-btn{
+  padding:1.25rem 2rem;
+  font-size:1.25rem;
+  line-height:1;
+  border-radius:999px;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 6px 18px rgba(14,165,233,.25);
+  transition:transform .12s ease, box-shadow .12s ease, background-color .12s ease;
+}
+#play-btn:hover, #play-btn:focus-visible{
+  transform:translateY(-1px) scale(1.02);
+  box-shadow:0 10px 24px rgba(2,94,143,.35);
+  background:#0b82c0;
+}
+{% endblock %}
+
+{% block content %}
+
+{% if page_navigation %}
+<nav aria-label="On this page" style="margin:1rem 0">
+  <strong style="display:block;margin-bottom:.25rem;font-size:.95rem">On this page</strong>
+  <ul style="list-style:none;display:flex;flex-wrap:wrap;gap:.5rem;padding:0;margin:0">
+    {% for nav_item in page_navigation %}
+    <li><a class="nav-link" href="#{{ nav_item.anchor }}">{{ nav_item.title }}</a></li>
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+
+{% if game_embed %}
+<section aria-label="Game">
+  <h1 style="text-align:center;margin:0 0 1.5rem;font-size:2.5rem;font-weight:700;color:var(--brand)">{{ page_title }}</h1>
+  <div class="frame-wrap">
+    <!-- Hero Image Background -->
+    <img src="{{ hero_image }}" 
+         alt="{{ hero_seo_attributes.alt }}"
+         title="{{ hero_seo_attributes.title }}"
+         loading="{{ hero_seo_attributes.loading }}"
+         decoding="{{ hero_seo_attributes.decoding }}"
+         style="position:absolute;inset:0;z-index:0;pointer-events:none;filter:blur(14px) saturate(1.05);transform:scale(1.1);width:100%;height:100%;object-fit:cover;">
+    
+    <div class="overlay" id="overlay">
+      <div style="display:grid;place-items:center;text-align:center;padding:1rem">
+        <button id="play-btn" class="btn" aria-controls="game-frame" aria-label="Load and play {{ game_name }} now">▶ Play Now</button>
+      </div>
+    </div>
+    <button id="exit-full" class="exit-btn" aria-label="Exit full view" title="Exit">✕</button>
+    <iframe id="game-frame" title="{{ game_name }} Game" loading="lazy" allowfullscreen
+      src="about:blank"
+      sandbox="allow-pointer-lock allow-presentation allow-popups allow-forms"
+    ></iframe>
+  </div>
+  
+  {% if info_cards %}
+  <div class="cards" role="group" aria-label="Quick links">
+    {% for card in info_cards %}
+    <div class="card">
+      <h2 style="margin:.25rem 0 0;font-size:1.1rem">{{ card.title }}</h2>
+      <p style="margin:.25rem 0">{{ card.content | safe }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if custom_html_content %}
+{{ custom_html_content | safe }}
+{% endif %}
+
+
+{% if cookie_banner %}
+<div id="cookie-banner">
+  <p>{{ cookie_banner.message }}</p>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+    <button class="btn" onclick="acceptCookies()">{{ cookie_banner.accept_text }}</button>
+    <button class="btn secondary" onclick="declineCookies()">{{ cookie_banner.decline_text }}</button>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if game_embed %}
+<script>
+// Game loading functionality - Optimized for performance
+document.addEventListener('DOMContentLoaded', () => {
+  const playBtn = document.getElementById('play-btn');
+  const gameFrame = document.getElementById('game-frame');
+  const frameWrap = document.querySelector('.frame-wrap');
+  const overlay = document.getElementById('overlay');
+  const exitBtn = document.getElementById('exit-full');
+
+  if (playBtn && gameFrame) {
+    playBtn.addEventListener('click', () => {
+      gameFrame.src = '{{ game_embed.url }}';
+      // Use requestAnimationFrame to avoid forced reflow
+      requestAnimationFrame(() => {
+        overlay.style.display = 'none';
+        document.body.classList.add('playing');
+        frameWrap.classList.add('fullscreen');
+      });
+    });
+  }
+
+  if (exitBtn) {
+    exitBtn.addEventListener('click', () => {
+      document.body.classList.remove('playing');
+      frameWrap.classList.remove('fullscreen');
+    });
+  }
+
+  // ESC key to exit fullscreen
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.body.classList.contains('playing')) {
+      document.body.classList.remove('playing');
+      frameWrap.classList.remove('fullscreen');
+    }
+  });
+});
+</script>
+{% endif %}
+
+{% if cookie_banner %}
+<script>
+// Cookie banner functionality - Optimized for performance
+function acceptCookies() {
+  localStorage.setItem('consent', 'yes');
+  const banner = document.getElementById('cookie-banner');
+  if (banner) {
+    requestAnimationFrame(() => {
+      banner.style.display = 'none';
+    });
+  }
+}
+
+function declineCookies() {
+  localStorage.setItem('consent', 'no');
+  const banner = document.getElementById('cookie-banner');
+  if (banner) {
+    requestAnimationFrame(() => {
+      banner.style.display = 'none';
+    });
+  }
+}
+
+// Show banner if no consent stored - Optimized
+document.addEventListener('DOMContentLoaded', () => {
+  const consent = localStorage.getItem('consent');
+  if (!consent) {
+    const banner = document.getElementById('cookie-banner');
+    if (banner) {
+      requestAnimationFrame(() => {
+        banner.style.display = 'block';
+      });
+    }
+  }
+});
+</script>
+{% endif %}
+{% endblock %}
+

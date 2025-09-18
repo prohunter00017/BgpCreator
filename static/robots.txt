@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://clashroyalegame.online/sitemap.xml
