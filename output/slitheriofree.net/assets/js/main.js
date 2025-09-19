@@ -213,42 +213,139 @@
     // ==========================================================================
 
     /**
-     * Enhanced game controls and functionality
+     * Enter fullscreen mode
      */
-    function initializeGameFeatures() {
-        const gameFrame = document.getElementById('gameFrame');
-        const gameLoading = document.getElementById('gameLoading');
-        const gameContainer = document.querySelector('.game-container');
+    function enterFullscreen(element) {
+        const elem = element || document.querySelector('.frame-wrap');
+        if (!elem) return;
 
-        if (!gameFrame) return;
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+            elem.mozRequestFullScreen();
+        } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen();
+        }
+    }
 
-        // Game loading enhancement
-        let loadingTimeout = setTimeout(() => {
-            if (gameLoading && gameLoading.style.display !== 'none') {
-                gameLoading.innerHTML = `
-                    <div class="text-center">
-                        <div class="spinner-border text-primary mb-3" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="text-muted">Loading game... This may take a moment.</p>
-                        <button class="btn btn-outline-primary btn-sm" onclick="reloadGame()">
-                            <i class="bi bi-arrow-clockwise me-1"></i> Retry
+    /**
+     * Exit fullscreen mode
+     */
+    function exitFullscreen() {
+        // Check if document is actually in fullscreen mode
+        const isFullscreen = !!(
+            document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement ||
+            document.msFullscreenElement
+        );
+        
+        if (!isFullscreen) {
+            return; // Don't try to exit if not in fullscreen
+        }
+        
+        try {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        } catch (error) {
+            // Silently handle exit fullscreen errors
+        }
+    }
+
+    /**
+     * Reload current game
+     */
+    function reloadGame() {
+        const gameFrame = document.getElementById('game-frame');
+        const playBtn = document.getElementById('play-btn');
+        
+        if (gameFrame && playBtn) {
+            gameFrame.src = 'about:blank';
+            const overlay = document.getElementById('overlay');
+            if (overlay) {
+                overlay.style.display = 'grid';
+                overlay.innerHTML = `
+                    <div class="play-button-container">
+                        <button id="play-btn" class="btn primary-play-btn" aria-controls="game-frame">
+                            <span class="play-icon">▶</span>
+                            <span class="play-text">Play Now</span>
                         </button>
                     </div>
                 `;
+                // Re-initialize play button
+                initializeGameFeatures();
             }
-        }, 10000);
+        }
+    }
+
+    // Make functions globally available
+    window.enterFullscreen = enterFullscreen;
+    window.exitFullscreen = exitFullscreen;
+    window.reloadGame = reloadGame;
+
+    /**
+     * Enhanced game controls and functionality
+     */
+    function initializeGameFeatures() {
+        const gameFrame = document.getElementById('game-frame');
+        const playBtn = document.getElementById('play-btn');
+        const overlay = document.getElementById('overlay');
+        const exitBtn = document.getElementById('exit-full');
+        const frameWrap = document.querySelector('.frame-wrap');
+
+        if (!gameFrame) return;
+
+        // Play button functionality
+        if (playBtn && overlay) {
+            playBtn.addEventListener('click', function() {
+                // Get game URL from data attribute or construct it
+                let gameUrl = this.dataset.gameUrl || gameFrame.dataset.gameUrl;
+                
+                // Fallback: construct URL from current page
+                if (!gameUrl || gameUrl === 'undefined' || gameUrl.includes('{{')) {
+                    const currentPath = window.location.pathname;
+                    if (currentPath.includes('/games/')) {
+                        // For game pages, use the HTML file as the game
+                        gameUrl = currentPath;
+                    } else {
+                        // For index page, use a default game
+                        gameUrl = '/games/golf-hit.html';
+                    }
+                }
+                
+                if (gameUrl) {
+                    gameFrame.src = gameUrl;
+                    overlay.style.display = 'none';
+                    
+                    // Track game play
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', 'game_started', {
+                            'game_url': gameUrl
+                        });
+                    }
+                }
+            });
+        }
+
+        // Exit fullscreen functionality
+        if (exitBtn) {
+            exitBtn.addEventListener('click', function() {
+                exitFullscreen();
+                document.body.classList.remove('playing');
+            });
+        }
 
         // Enhanced game load event
         gameFrame.onload = function() {
-            clearTimeout(loadingTimeout);
-            if (gameLoading) {
-                gameLoading.style.opacity = '0';
-                setTimeout(() => {
-                    gameLoading.style.display = 'none';
-                }, CONFIG.ANIMATION_DURATION);
-            }
-            
             // Track game load
             if (typeof gtag !== 'undefined') {
                 gtag('event', 'game_loaded', {
@@ -260,18 +357,20 @@
 
         // Game error handling
         gameFrame.onerror = function() {
-            clearTimeout(loadingTimeout);
-            if (gameLoading) {
-                gameLoading.innerHTML = `
-                    <div class="text-center">
-                        <i class="bi bi-exclamation-triangle text-warning fs-1 mb-3"></i>
-                        <h5>Failed to Load Game</h5>
-                        <p class="text-muted mb-3">There was an error loading the game. Please try again.</p>
-                        <button class="btn btn-primary" onclick="reloadGame()">
-                            <i class="bi bi-arrow-clockwise me-1"></i> Reload Game
-                        </button>
+            if (overlay) {
+                overlay.innerHTML = `
+                    <div class="play-button-container">
+                        <div class="text-center text-white">
+                            <i class="bi bi-exclamation-triangle fs-1 mb-3"></i>
+                            <h5>Failed to Load Game</h5>
+                            <p class="mb-3">There was an error loading the game. Please try again.</p>
+                            <button class="btn btn-light" onclick="location.reload()">
+                                <i class="bi bi-arrow-clockwise me-1"></i> Reload Page
+                            </button>
+                        </div>
                     </div>
                 `;
+                overlay.style.display = 'grid';
             }
         };
 
@@ -289,18 +388,13 @@
                 document.msFullscreenElement
             );
 
-            if (gameContainer) {
-                gameContainer.classList.toggle('fullscreen-active', isFullscreen);
+            if (frameWrap) {
+                frameWrap.classList.toggle('fullscreen', isFullscreen);
             }
 
-            // Update fullscreen button
-            const fullscreenBtns = document.querySelectorAll('[onclick*="toggleFullscreen"]');
-            fullscreenBtns.forEach(btn => {
-                const icon = btn.querySelector('i');
-                if (icon) {
-                    icon.className = isFullscreen ? 'bi bi-fullscreen-exit' : 'bi bi-arrows-fullscreen';
-                }
-            });
+            if (!isFullscreen) {
+                document.body.classList.remove('playing');
+            }
         }
 
         // Game performance monitoring
@@ -309,13 +403,13 @@
                 const observer = new PerformanceObserver((list) => {
                     for (const entry of list.getEntries()) {
                         if (entry.name.includes('game') || entry.name === gameFrame.src) {
-                            console.log('Game performance:', entry.duration);
+                            // console.log('Game performance:', entry.duration);
                         }
                     }
                 });
                 observer.observe({ entryTypes: ['navigation', 'resource'] });
             } catch (e) {
-                console.log('Performance monitoring not available');
+                // console.log('Performance monitoring not available');
             }
         }
     }
@@ -645,7 +739,7 @@
                     }
                 }).observe({ type: 'largest-contentful-paint', buffered: true });
             } catch (e) {
-                console.log('LCP monitoring not supported');
+                // console.log('LCP monitoring not supported');
             }
             
             // Cumulative Layout Shift
@@ -667,7 +761,7 @@
                     }
                 }).observe({ type: 'layout-shift', buffered: true });
             } catch (e) {
-                console.log('CLS monitoring not supported');
+                // console.log('CLS monitoring not supported');
             }
         }
     }
@@ -712,7 +806,7 @@
             setInterval(() => {
                 const memory = performance.memory;
                 if (memory.usedJSHeapSize > memory.jsHeapSizeLimit * 0.9) {
-                    console.warn('High memory usage detected');
+                    // console.warn('High memory usage detected');
                     // Trigger cleanup if needed
                     cleanupMemory();
                 }
@@ -1040,7 +1134,7 @@
                 createToast('Link copied to clipboard!', 'success');
                 announceToScreenReader('Link copied to clipboard');
             }).catch(err => {
-                console.error('Could not copy text: ', err);
+                // console.error('Could not copy text: ', err);
                 createToast('Failed to copy link', 'danger');
             });
         } else {
@@ -1059,7 +1153,7 @@
                 createToast('Link copied to clipboard!', 'success');
                 announceToScreenReader('Link copied to clipboard');
             } catch (err) {
-                console.error('Fallback: Could not copy text: ', err);
+                // console.error('Fallback: Could not copy text: ', err);
                 createToast('Failed to copy link', 'danger');
             }
             
@@ -1091,10 +1185,10 @@
             // Mark initialization as complete
             document.body.classList.add('js-loaded');
             
-            console.log('Enhanced Static Site Generator JavaScript initialized successfully');
+            // console.log('Enhanced Static Site Generator JavaScript initialized successfully');
             
         } catch (error) {
-            console.error('Error during initialization:', error);
+            // console.error('Error during initialization:', error);
         }
     }
 
@@ -1109,10 +1203,10 @@
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
             // Page is hidden, pause non-critical operations
-            console.log('Page hidden, pausing operations');
+            // console.log('Page hidden, pausing operations');
         } else {
             // Page is visible, resume operations
-            console.log('Page visible, resuming operations');
+            // console.log('Page visible, resuming operations');
         }
     });
 
@@ -1126,10 +1220,10 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
             .then(registration => {
-                console.log('ServiceWorker registration successful');
+                // console.log('ServiceWorker registration successful');
             })
             .catch(error => {
-                console.log('ServiceWorker registration failed');
+                // console.log('ServiceWorker registration failed');
             });
     });
 }

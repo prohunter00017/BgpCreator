@@ -1,0 +1,42 @@
+{% if game_embed %}
+<section aria-label="Game" class="game-section">
+  <div class="page-header">
+    <h1 class="game-title">{{ page_title }}</h1>
+  </div>
+  
+  <!-- Main Game Container -->
+  <div class="main-game-container">
+    <div class="game-frame-wrapper">
+      <div class="frame-wrap">
+        <!-- Hero Image Background -->
+        <img src="{{ hero_image }}" 
+             alt="{{ hero_seo_attributes.alt }}"
+             title="{{ hero_seo_attributes.title }}"
+             loading="{{ hero_seo_attributes.loading }}"
+             decoding="{{ hero_seo_attributes.decoding }}"
+             class="game-background-image">
+        
+        <div class="overlay" id="overlay">
+          <div class="play-button-container">
+            <button id="play-btn" class="btn primary-play-btn" aria-controls="game-frame" aria-label="Load and play {{ game_name }} now" data-game-url="{{ game_url }}">
+              <span class="play-icon">▶</span>
+              <span class="play-text">Play Now</span>
+            </button>
+            <noscript>
+              <p style="color: white; text-align: center; margin-top: 1rem;">
+                JavaScript is required to play games. Please enable JavaScript in your browser.
+              </p>
+            </noscript>
+          </div>
+        </div>
+        <button id="exit-full" class="exit-btn" aria-label="Exit full view" title="Exit">✕</button>
+        <iframe id="game-frame" title="{{ game_name }} Game" loading="lazy" allowfullscreen
+          src="about:blank"
+          sandbox="allow-pointer-lock allow-presentation allow-popups allow-forms"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+  
+</section>
+{% endif %}

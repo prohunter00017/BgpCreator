@@ -99,30 +99,11 @@
 
     main{display:block}
     /* escaperoad.io main layout */
-    .main-layout{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start;margin-top:20px}
-    .sidebar{position:sticky;top:120px;background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:20px;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
-    .sidebar h3{margin:0 0 1rem;font-size:1.1rem;font-weight:600;color:var(--fg)}
-    .games-widget{display:flex;flex-direction:column;gap:0.75rem}
-.game-widget-item{display:flex;align-items:center;text-decoration:none;color:inherit;transition:transform 0.2s ease;gap:0.75rem;padding:0.5rem;border-radius:8px;background:rgba(255,255,255,0.5);border:1px solid rgba(229,231,235,0.5)}
-.game-widget-item:hover{transform:translateY(-1px);text-decoration:none;background:rgba(255,255,255,0.8);border-color:var(--brand)}
-    .game-widget-thumb{width:50px;height:50px;object-fit:cover;border-radius:8px;display:block;flex-shrink:0}
-.game-widget-title{font-size:0.85rem;font-weight:500;line-height:1.3;margin:0;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-    .sidebar-toggle{display:none;background:var(--brand);color:#fff;border:none;padding:0.5rem 1rem;border-radius:8px;cursor:pointer;margin-bottom:1rem;font-weight:500}
+    .main-layout{margin-top:20px}
     /* escaperoad.io footer styling */
     footer{padding:20px 0;border-top:1px solid #ddd;background:#f8f8f8;text-align:center;font-size:13px;color:#666}
     footer a{color:#333;text-decoration:none}
     footer a:hover{text-decoration:underline}
-    /* escaperoad.io responsive layout */
-    @media (max-width: 1024px) {
-      .main-layout{grid-template-columns:1fr;gap:20px}
-      .sidebar{position:static;margin-top:30px}
-      .sidebar-toggle{display:block}
-      .sidebar.collapsed{display:none}
-    }
-    @media (max-width: 768px) {
-      .main-layout{gap:15px}
-      .sidebar{margin-top:20px;padding:15px}
-    }
     .footer-links{display:flex;flex-wrap:wrap;gap:.75rem;justify-content:center;margin:.5rem 0}
 
     .skip-link{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
@@ -222,8 +203,7 @@
     
 
     <div class="main-layout">
-      <div class="main-content">
-        
+      
 <h1>Dmca</h1>
 
 
@@ -244,46 +224,6 @@
 
 
 
-      </div>
-      
-      
-      <aside class="sidebar" role="complementary" aria-label="More Games">
-        <h3>🎮 More Games</h3>
-        <div class="games-widget">
-              
-              <a href="/games/dasdadad.html" class="game-widget-item" title="Play Golf Hit online">
-                <img src="/assets/images/golf-hit.webp" alt="Play Golf Hit - Slither Io" class="game-widget-thumb" loading="lazy" decoding="async" width="50" height="50">
-                <div class="game-widget-title">Golf Hit</div>
-              </a>
-              
-              <a href="/games/ggg.html" class="game-widget-item" title="Play Golf Hit online">
-                <img src="/assets/images/golf-hit.webp" alt="Play Golf Hit - Slither Io" class="game-widget-thumb" loading="lazy" decoding="async" width="50" height="50">
-                <div class="game-widget-title">Golf Hit</div>
-              </a>
-              
-              <a href="/games/golf-hit.html" class="game-widget-item" title="Play Golf Hit online">
-                <img src="/assets/images/golf-hit.webp" alt="Play Golf Hit - Slither Io" class="game-widget-thumb" loading="lazy" decoding="async" width="50" height="50">
-                <div class="game-widget-title">Golf Hit</div>
-              </a>
-              
-              <a href="/games/golf.html" class="game-widget-item" title="Play Golf Hit online">
-                <img src="/assets/images/golf-hit.webp" alt="Play Golf Hit - Slither Io" class="game-widget-thumb" loading="lazy" decoding="async" width="50" height="50">
-                <div class="game-widget-title">Golf Hit</div>
-              </a>
-              
-              <a href="/games/qqq.html" class="game-widget-item" title="Play Golf Hit online">
-                <img src="/assets/images/golf-hit.webp" alt="Play Golf Hit - Slither Io" class="game-widget-thumb" loading="lazy" decoding="async" width="50" height="50">
-                <div class="game-widget-title">Golf Hit</div>
-              </a>
-              
-        </div>
-        
-        <div style="text-align:center;margin-top:1rem;">
-          <a href="games.html" style="font-size:0.85rem;color:var(--brand);font-weight:500;">View All Games →</a>
-        </div>
-        
-      </aside>
-      
     </div>
   </main>
   
@@ -342,16 +282,6 @@
       });
     }
 
-    // Sidebar toggle for mobile
-    const sidebarToggle = document.querySelector('.sidebar-toggle');
-    const sidebar = document.querySelector('.sidebar');
-    if(sidebarToggle && sidebar) {
-      sidebarToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-        const isCollapsed = sidebar.classList.contains('collapsed');
-        sidebarToggle.textContent = isCollapsed ? 'Show Games' : 'Hide Games';
-      });
-    }
 
     // escaperoad.io back-to-top button functionality
     const backToTop = document.getElementById('backToTop');

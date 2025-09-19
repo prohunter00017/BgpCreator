@@ -161,14 +161,14 @@ class SiteConfig:
         }
     
     def get_dynamic_hero_image(self):
-        """Get hero image filename - use the same logic as image optimizer"""
+        """Get hero image filename with correct path - use the same logic as image optimizer"""
         # The image optimizer uses seo_config fallback, so we need to match that
         # Until we fully migrate, use the fallback that image_optimizer.py uses
         try:
             from . import settings as simple_config
-            return f"{simple_config.SEO_FILENAME}.webp"
+            return f"/assets/images/seo/{simple_config.SEO_FILENAME}.webp"
         except:
-            return "space-waves-pro.webp"  # Match image optimizer fallback
+            return "/assets/images/seo/space-waves-pro.webp"  # Match image optimizer fallback
     
     def _get_about_url(self):
         """Get About page URL - English only"""

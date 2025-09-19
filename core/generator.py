@@ -25,6 +25,7 @@ import argparse
 import re
 import json
 import hashlib
+import random
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader, select_autoescape, ChoiceLoader
 from .site_loader import load_site_settings, get_site_paths, get_site_output_dir
@@ -216,6 +217,87 @@ class SiteGenerator:
     def _get_sidebar_title(self):
         """Get sidebar title - English only"""
         return "More Games"
+    
+    def _get_all_games_for_widget(self, games, exclude_slug=None):
+        """Get all games for the icon widget
+        
+        Args:
+            games: List of all games
+            exclude_slug: Game slug to exclude (optional, for current game page)
+            
+        Returns:
+            List of all games formatted for the widget (up to 60 games)
+        """
+        if not games or not isinstance(games, list):
+            return []
+            
+        # Filter out the current game if specified and ensure valid games
+        available_games = [g for g in games if isinstance(g, dict) and g.get("slug") and g.get("title")]
+        if exclude_slug:
+            available_games = [g for g in available_games if g["slug"] != exclude_slug]
+        
+        # Return up to 60 games
+        result = []
+        for g in available_games[:60]:
+            if not g.get('slug') or not g.get('title'):
+                continue
+            # Get logo path - it's already in the format "img/filename.webp"
+            logo = g.get('meta', {}).get('logo')
+            if logo:
+                # Remove the "img/" prefix if present since it's already in assets/images/
+                if logo.startswith('img/'):
+                    image_path = f"/assets/images/{logo[4:]}"
+                else:
+                    image_path = f"/assets/images/{logo}"
+            else:
+                # Fallback to hero image
+                hero = g.get('hero_image', '')
+                if hero.startswith('img/'):
+                    image_path = f"/assets/images/{hero[4:]}"
+                else:
+                    image_path = f"/assets/images/{hero if hero else 'gamelogo.webp'}"
+            
+            result.append({
+                "title": g.get("title", "Untitled Game"),
+                "url": self._get_page_url(g.get('slug', ''), is_game_page=True),
+                "image": image_path
+            })
+        return result
+    
+    def _get_random_games_for_widget(self, games, exclude_slug=None):
+        """Get a random selection of games for the widget
+        
+        Args:
+            games: List of all games
+            exclude_slug: Game slug to exclude (optional, for current game page)
+            
+        Returns:
+            List of randomly selected games for the widget (always randomized)
+        """
+        if not games or not isinstance(games, list):
+            return []
+            
+        # Filter out the current game if specified and ensure valid games
+        available_games = [g for g in games if isinstance(g, dict) and g.get("slug") and g.get("title")]
+        if exclude_slug:
+            available_games = [g for g in available_games if g["slug"] != exclude_slug]
+        
+        # Always randomize the order, regardless of count
+        if len(available_games) == 0:
+            return []
+        
+        # Select up to 12 games randomly (or all if fewer than 12)
+        try:
+            random_games = random.sample(available_games, min(12, len(available_games)))
+        except (ValueError, TypeError):
+            # Fallback if sampling fails
+            random_games = available_games[:12]
+        
+        return [{
+            "title": g.get("title", "Untitled Game"),
+            "url": self._get_page_url(g.get('slug', ''), is_game_page=True),
+            "image": f"/assets/images/{(g.get('meta', {}).get('logo') or g.get('hero_image', 'placeholder.webp'))}" 
+        } for g in random_games if g.get('slug') and g.get('title')]
 
     def _generate_game_pages(self, games):
         """Generate per-game pages using templates/index.html layout."""
@@ -292,15 +374,13 @@ class SiteGenerator:
                            # index.html expectations
                            "game_name": localized_title,
                            "game_embed": {"url": game["embed_url"]},
+                           "game_url": game["embed_url"],  # Add game_url for the play button
                            "hero_image": game["hero_image"],
                            "hero_seo_attributes": self.config.get_image_seo_attributes(game["hero_image"]),
                            "custom_html_content": game["content_html"],
                            # Add games data for sidebar widget (prefer logo over hero)
-                           "games": [{
-                               "title": g["title"],
-                               "url": self._get_page_url(g['slug'], is_game_page=True),
-                               "image": (g.get("meta", {}).get("logo") or g["hero_image"]) 
-                           } for g in games if g["slug"] != page_key],  # Exclude current game
+                           "games": self._get_random_games_for_widget(games, page_key),
+                           "all_games": self._get_all_games_for_widget(games, page_key),
                            "sidebar_title": self._get_sidebar_title()
                            }
                 # Update context with asset mappings for organized paths
@@ -777,15 +857,13 @@ class SiteGenerator:
             
             # Add games data for sidebar widget (prefer logo over hero)
             if hasattr(self, '_games') and self._games:
-                context['games'] = [{
-                    "title": g["title"],
-                    "url": self._get_page_url(g['slug'], is_game_page=True),
-                    "image": (g.get("meta", {}).get("logo") or g["hero_image"]) 
-                } for g in self._games]
+                context['games'] = self._get_random_games_for_widget(self._games)
+                context['all_games'] = self._get_all_games_for_widget(self._games)
                 # Add localized sidebar title based on language
                 context['sidebar_title'] = self._get_sidebar_title()
             else:
                 context['games'] = []
+                context['all_games'] = []
                 context['sidebar_title'] = "More Games"
             
             # Cache SEO filename to avoid repeated lookups

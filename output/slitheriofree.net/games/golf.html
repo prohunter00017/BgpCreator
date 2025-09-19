@@ -99,30 +99,11 @@
 
     main{display:block}
     /* escaperoad.io main layout */
-    .main-layout{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start;margin-top:20px}
-    .sidebar{position:sticky;top:120px;background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:20px;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
-    .sidebar h3{margin:0 0 1rem;font-size:1.1rem;font-weight:600;color:var(--fg)}
-    .games-widget{display:flex;flex-direction:column;gap:0.75rem}
-.game-widget-item{display:flex;align-items:center;text-decoration:none;color:inherit;transition:transform 0.2s ease;gap:0.75rem;padding:0.5rem;border-radius:8px;background:rgba(255,255,255,0.5);border:1px solid rgba(229,231,235,0.5)}
-.game-widget-item:hover{transform:translateY(-1px);text-decoration:none;background:rgba(255,255,255,0.8);border-color:var(--brand)}
-    .game-widget-thumb{width:50px;height:50px;object-fit:cover;border-radius:8px;display:block;flex-shrink:0}
-.game-widget-title{font-size:0.85rem;font-weight:500;line-height:1.3;margin:0;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-    .sidebar-toggle{display:none;background:var(--brand);color:#fff;border:none;padding:0.5rem 1rem;border-radius:8px;cursor:pointer;margin-bottom:1rem;font-weight:500}
+    .main-layout{margin-top:20px}
     /* escaperoad.io footer styling */
     footer{padding:20px 0;border-top:1px solid #ddd;background:#f8f8f8;text-align:center;font-size:13px;color:#666}
     footer a{color:#333;text-decoration:none}
     footer a:hover{text-decoration:underline}
-    /* escaperoad.io responsive layout */
-    @media (max-width: 1024px) {
-      .main-layout{grid-template-columns:1fr;gap:20px}
-      .sidebar{position:static;margin-top:30px}
-      .sidebar-toggle{display:block}
-      .sidebar.collapsed{display:none}
-    }
-    @media (max-width: 768px) {
-      .main-layout{gap:15px}
-      .sidebar{margin-top:20px;padding:15px}
-    }
     .footer-links{display:flex;flex-wrap:wrap;gap:.75rem;justify-content:center;margin:.5rem 0}
 
     .skip-link{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
@@ -134,59 +115,885 @@
     .back-to-top:hover{background:#555;transform:translateY(-2px)}
     
     
+/* ========================================================================== */
+/* ORGANIZED CSS ARCHITECTURE FOR EASY FEATURE ADDITION                      */
+/* ========================================================================== */
 
-.frame-wrap{position:relative;border-radius:var(--radius);overflow:hidden;background:var(--surface);border:1px solid #e5e7eb}
-iframe{width:100%;aspect-ratio:16/9;border:0}
-.overlay{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(180deg, rgba(2,6,23,.04), rgba(2,6,23,.08));color:#0b1220;font-weight:600;z-index:3;pointer-events:auto}
-.overlay *{pointer-events:auto}
-.frame-wrap > iframe{position:relative;z-index:1}
-.overlay span{background:#fff;border:1px solid #e5e7eb;padding:.5rem .75rem;border-radius:999px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+/* ==========================================================================
+   1. BASE & LAYOUT STYLES
+   ========================================================================== */
 
-/* Fullscreen play state */
-body.playing{overflow:hidden}
-.frame-wrap.fullscreen{position:fixed;inset:0;z-index:9999;border-radius:0;border:0}
-.frame-wrap.fullscreen img{filter:blur(18px) saturate(1.05);transform:scale(1.12)}
-.frame-wrap.fullscreen > iframe{width:100%;height:100%;aspect-ratio:auto}
-/* Exit full view control */
-.exit-btn{position:absolute;top:12px;right:12px;z-index:4;border:0;background:rgba(11,18,32,.75);color:#fff;border-radius:10px;padding:.5rem .65rem;font-weight:600;cursor:pointer;display:none}
-.exit-btn:focus-visible{outline:2px solid var(--brand)}
-.frame-wrap.fullscreen .exit-btn{display:inline-flex}
-
-/* escaperoad.io content section styling */
-.content-section{margin:30px 0;padding:0}
-.content-section h2{font-size:24px;font-weight:600;color:#333;margin:0 0 15px;border-bottom:1px solid #eee;padding-bottom:10px}
-.content-section h3{font-size:18px;font-weight:600;color:#333;margin:20px 0 10px}
-.content-section p{font-size:14px;line-height:1.6;color:#666;margin:0 0 15px}
-.content-section ul{margin:10px 0 15px 20px}
-.content-section li{font-size:14px;line-height:1.5;color:#666;margin:5px 0}
-.content-section strong{color:#333}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin:1.5rem 0}
-.card{background:var(--surface);border:1px solid #e5e7eb;border-radius:var(--radius);padding:1rem}
-
-details{background:var(--surface);border:1px solid #e5e7eb;border-radius:var(--radius);padding: .75rem 1rem}
-details+details{margin-top:.75rem}
-summary{cursor:pointer;font-weight:600}
-
-#cookie-banner{display:none;position:fixed;left:1rem;right:1rem;bottom:1rem;z-index:50;background:#0b1220;color:#fff;border-radius:12px;padding:1rem;box-shadow:0 10px 30px rgba(0,0,0,.2)}
-#cookie-banner p{margin:0 0 .5rem}
-.btn{display:inline-block;border:1px solid #ffffff33;color:#fff;background:var(--brand);padding:.5rem .75rem;border-radius:8px}
-.btn.secondary{background:transparent}
-/* Larger primary play button without affecting other buttons */
-#play-btn{
-  padding:1.25rem 2rem;
-  font-size:1.25rem;
-  line-height:1;
-  border-radius:999px;
-  font-weight:700;
-  cursor:pointer;
-  box-shadow:0 6px 18px rgba(14,165,233,.25);
-  transition:transform .12s ease, box-shadow .12s ease, background-color .12s ease;
+/* Main Page Structure */
+.game-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
 }
-#play-btn:hover, #play-btn:focus-visible{
-  transform:translateY(-1px) scale(1.02);
-  box-shadow:0 10px 24px rgba(2,94,143,.35);
-  background:#0b82c0;
+
+.page-header {
+  text-align: center;
+  margin-bottom: 2rem;
 }
+
+.game-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--brand);
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Main Game Container */
+.main-game-container {
+  margin-bottom: 2rem;
+}
+
+.game-frame-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+
+/* Content Layout */
+.content-section {
+  margin: 30px 0;
+  padding: 0;
+}
+
+.content-section h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.content-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 20px 0 10px;
+}
+
+.content-section p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #666;
+  margin: 0 0 15px;
+}
+
+.content-section ul {
+  margin: 10px 0 15px 20px;
+}
+
+.content-section li {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #666;
+  margin: 5px 0;
+}
+
+.content-section strong {
+  color: #333;
+}
+
+/* ==========================================================================
+   2. COMPONENT STYLES
+   ========================================================================== */
+
+/* Button Components */
+.btn {
+  display: inline-block;
+  border: 1px solid #ffffff33;
+  color: #fff;
+  background: var(--brand);
+  padding: .5rem .75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn.secondary {
+  background: transparent;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+#play-btn {
+  padding: 1.25rem 2rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  border-radius: 999px;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(14,165,233,.25);
+  transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease;
+}
+
+#play-btn:hover, 
+#play-btn:focus-visible {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 10px 24px rgba(2,94,143,.35);
+  background: #0b82c0;
+}
+
+/* Card Components */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius);
+  padding: 1rem;
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Collapsible Components */
+details {
+  background: var(--surface);
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius);
+  padding: .75rem 1rem;
+  margin-bottom: .75rem;
+}
+
+details + details {
+  margin-top: .75rem;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   3. ENHANCED GAME FRAME STYLES
+   ========================================================================== */
+
+/* Play Button Enhancement */
+.play-button-container {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 1rem;
+}
+
+.primary-play-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 2rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  border-radius: 999px;
+  font-weight: 700;
+  background: #0ea5e9;
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(14,165,233,.25);
+  transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.primary-play-btn:hover, 
+.primary-play-btn:focus-visible {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(2,94,143,.4);
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.play-icon {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+.play-text {
+  font-weight: 700;
+}
+
+/* Background Image Styling */
+.game-background-image {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  filter: blur(14px) saturate(1.05);
+  transform: scale(1.1);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter 0.3s ease;
+}
+
+/* Game Frame Height Fix */
+.frame-wrap {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid #e5e7eb;
+  height: 100%;
+  min-height: 400px;
+}
+
+iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.frame-wrap > iframe {
+  position: relative;
+  z-index: 1;
+  aspect-ratio: unset;
+}
+
+/* ==========================================================================
+   4. INTERACTIVE & MEDIA STYLES
+   ========================================================================== */
+
+/* Game Frame & Iframe */
+.frame-wrap {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid #e5e7eb;
+}
+
+iframe {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border: 0;
+}
+
+.frame-wrap > iframe {
+  position: relative;
+  z-index: 1;
+}
+
+/* Overlay System */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, rgba(2,6,23,.04), rgba(2,6,23,.08));
+  color: #0b1220;
+  font-weight: 600;
+  z-index: 3;
+  pointer-events: auto;
+}
+
+.overlay * {
+  pointer-events: auto;
+}
+
+.overlay span {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  padding: .5rem .75rem;
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.06);
+}
+
+/* Fullscreen States */
+body.playing {
+  overflow: hidden;
+}
+
+.frame-wrap.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  border-radius: 0;
+  border: 0;
+}
+
+.frame-wrap.fullscreen img {
+  filter: blur(18px) saturate(1.05);
+  transform: scale(1.12);
+}
+
+.frame-wrap.fullscreen > iframe {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+}
+
+/* Exit Controls */
+.exit-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 4;
+  border: 0;
+  background: rgba(11,18,32,.75);
+  color: #fff;
+  border-radius: 10px;
+  padding: .5rem .65rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: none;
+  transition: background-color 0.2s ease;
+}
+
+.exit-btn:focus-visible {
+  outline: 2px solid var(--brand);
+}
+
+.exit-btn:hover {
+  background: rgba(11,18,32,.9);
+}
+
+.frame-wrap.fullscreen .exit-btn {
+  display: inline-flex;
+}
+
+/* ==========================================================================
+   5. NOTIFICATION & BANNER STYLES
+   ========================================================================== */
+
+/* Cookie Banner */
+#cookie-banner {
+  display: none;
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 50;
+  background: #0b1220;
+  color: #fff;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,.2);
+}
+
+#cookie-banner p {
+  margin: 0 0 .5rem;
+}
+
+/* ==========================================================================
+   6. RESPONSIVE DESIGN SYSTEM
+   ========================================================================== */
+
+/* Large Desktop (1200px+) */
+@media (min-width: 1200px) {
+  .widget-zones {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    grid-template-rows: auto auto;
+    gap: 2rem;
+    grid-template-areas: 
+      "top-widgets side-widgets"
+      "bottom-widgets side-widgets";
+  }
+  
+  .top-widgets {
+    grid-area: top-widgets;
+  }
+  
+  .side-widgets {
+    grid-area: side-widgets;
+  }
+  
+  .bottom-widgets {
+    grid-area: bottom-widgets;
+  }
+  
+  .game-section {
+    padding: 0 2rem;
+  }
+}
+
+/* Tablet (768px - 1199px) */
+@media (max-width: 1199px) and (min-width: 768px) {
+  .game-title {
+    font-size: 2.2rem;
+  }
+  
+  .primary-play-btn {
+    padding: 1.1rem 1.8rem;
+    font-size: 1.15rem;
+  }
+  
+  .widget-zones {
+    gap: 1.25rem;
+  }
+}
+
+/* Mobile (< 768px) */
+@media (max-width: 767px) {
+  .game-section {
+    padding: 0 0.75rem;
+  }
+  
+  .game-title {
+    font-size: 1.8rem;
+  }
+  
+  .primary-play-btn {
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .widget-zones {
+    gap: 1rem;
+  }
+  
+  .page-header {
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* ==========================================================================
+   7. UTILITY CLASSES (Ready for new features)
+   ========================================================================== */
+
+/* Spacing Utilities */
+.spacing-xs { gap: 0.25rem; }
+.spacing-sm { gap: 0.5rem; }
+.spacing-md { gap: 1rem; }
+.spacing-lg { gap: 1.5rem; }
+.spacing-xl { gap: 2rem; }
+
+/* Display Utilities */
+.show-mobile { display: none; }
+.show-tablet { display: none; }
+.show-desktop { display: none; }
+
+@media (max-width: 767px) {
+  .show-mobile { display: block; }
+  .hide-mobile { display: none; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .show-tablet { display: block; }
+  .hide-tablet { display: none; }
+}
+
+@media (min-width: 1024px) {
+  .show-desktop { display: block; }
+  .hide-desktop { display: none; }
+}
+
+/* Animation Utilities */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ==========================================================================
+   8. WIDGET FRAMEWORK SYSTEM
+   ========================================================================== */
+
+/* Widget Base Classes (for instant widget creation) */
+.widget {
+  background: var(--surface);
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+.widget:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transform: translateY(-1px);
+}
+
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.widget-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--brand);
+  margin: 0;
+}
+
+.widget-content {
+  flex: 1;
+  line-height: 1.6;
+}
+
+/* Widget Layout Systems */
+.widget-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.widget-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.widget-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.widget-grid-4 { grid-template-columns: repeat(4, 1fr); }
+.widget-grid-auto { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+
+/* Responsive Widget Grids */
+@media (max-width: 768px) {
+  .widget-grid-2,
+  .widget-grid-3,
+  .widget-grid-4 {
+    grid-template-columns: 1fr;
+  }
+  
+  .widget {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .widget-header {
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  .widget-title {
+    font-size: 1.1rem;
+  }
+}
+
+/* Interactive Element Base Classes */
+.interactive-element {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid transparent;
+}
+
+.interactive-element:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  border-color: var(--brand);
+}
+
+.interactive-element:active {
+  transform: translateY(0);
+}
+
+/* Widget Spacing and Alignment */
+.widget-center {
+  text-align: center;
+}
+
+.widget-flex {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.widget-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Widget Color Variants */
+.widget.primary {
+  border-color: var(--brand);
+  background: linear-gradient(135deg, rgba(14,165,233,0.02), rgba(14,165,233,0.05));
+}
+
+.widget.secondary {
+  border-color: #e5e7eb;
+  background: #f8fafc;
+}
+
+.widget.accent {
+  border-color: #fbbf24;
+  background: linear-gradient(135deg, rgba(251,191,36,0.02), rgba(251,191,36,0.05));
+}
+
+
+
+/* Content Split Container */
+.content-split-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* Desktop: Split layout */
+@media (min-width: 1200px) {
+  .content-split-container {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+  
+  .article-content-section {
+    flex: 1;
+    width: 50%;
+    padding-right: 1rem;
+  }
+  
+  .games-widget-section {
+    flex: 1;
+    width: 50%;
+    padding-left: 1rem;
+  }
+  
+  /* Adjust games grid for narrower container */
+  .games-widget-section .games-icon-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+  
+  /* Remove article section padding on desktop */
+  .article-content-section .container {
+    padding: 0;
+  }
+}
+
+/* Tablet and Mobile: Stack vertically with games first */
+@media (max-width: 1199px) {
+  .content-split-container {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .article-content-section,
+  .games-widget-section {
+    width: 100%;
+    padding: 0;
+  }
+  
+  /* Reorder: Games widget first on mobile/tablet */
+  .games-widget-section {
+    order: 1;
+    margin-bottom: 2rem;
+  }
+  
+  .article-content-section {
+    order: 2;
+  }
+}
+
+/* All Games Icon Widget Styles */
+.all-games-widget {
+  margin: 0;
+  padding: 0;
+}
+
+.games-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 0;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Desktop: Adjusted for split layout */
+@media (min-width: 1200px) {
+  .games-icon-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* Tablet: 6 icons per row */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .games-icon-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* Mobile: 4 icons per row */
+@media (max-width: 767px) {
+  .games-icon-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.game-icon-card {
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%;
+  overflow: hidden;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  display: block;
+}
+
+.game-icon-card:hover {
+  transform: scale(1.05);
+  z-index: 10;
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+}
+
+.game-icon-card img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Desktop: Max 5 games per row */
+@media (min-width: 1200px) {
+  .games-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+  }
+}
+
+/* Tablet: 3 games per row */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .games-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+  
+  .game-card {
+    max-width: 140px;
+  }
+}
+
+/* Mobile: 2 games per row */
+@media (max-width: 767px) {
+  .games-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+  }
+  
+  .games-widget {
+    margin: 1rem 0;
+    padding: 0.75rem 0;
+  }
+  
+  .widget-title {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .game-card {
+    max-width: 120px;
+  }
+}
+
+.game-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  max-width: 160px;
+  margin: 0 auto;
+}
+
+.game-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+}
+
+.game-image {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 100%; /* Square aspect ratio */
+  overflow: hidden;
+  background: var(--gray-100);
+}
+
+.game-image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-normal);
+  cursor: pointer;
+}
+
+.game-card:hover .game-image img {
+  transform: scale(1.05);
+}
+
+.game-info {
+  display: none;
+}
+
+.game-info .game-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  color: var(--gray-700);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.play-game-btn {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  width: 100%;
+  max-width: 65px;
+}
+
+.play-game-btn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
 
   </style>
 
@@ -284,41 +1091,61 @@ summary{cursor:pointer;font-weight:600}
     
 
     <div class="main-layout">
-      <div class="main-content">
-        
+      
 
 
 
 
-<section aria-label="Game">
-  <h1 style="text-align:center;margin:0 0 1.5rem;font-size:2.5rem;font-weight:700;color:var(--brand)">Golf Hit</h1>
-  <div class="frame-wrap">
-    <!-- Hero Image Background -->
-    <img src="/assets/images/golf-hit-Preview.webp" 
-         alt="Slither Io - Play Free Online"
-         title="Slither Io"
-         loading="lazy"
-         decoding="async"
-         style="position:absolute;inset:0;z-index:0;pointer-events:none;filter:blur(14px) saturate(1.05);transform:scale(1.1);width:100%;height:100%;object-fit:cover;">
-    
-    <div class="overlay" id="overlay">
-      <div style="display:grid;place-items:center;text-align:center;padding:1rem">
-        <button id="play-btn" class="btn" aria-controls="game-frame" aria-label="Load and play Golf Hit now">▶ Play Now</button>
-      </div>
-    </div>
-    <button id="exit-full" class="exit-btn" aria-label="Exit full view" title="Exit">✕</button>
-    <iframe id="game-frame" title="Golf Hit Game" loading="lazy" allowfullscreen
-      src="about:blank"
-      sandbox="allow-pointer-lock allow-presentation allow-popups allow-forms"
-    ></iframe>
+<section aria-label="Game" class="game-section">
+  <div class="page-header">
+    <h1 class="game-title">Golf Hit</h1>
   </div>
   
+  <!-- Main Game Container -->
+  <div class="main-game-container">
+    <div class="game-frame-wrapper">
+      <div class="frame-wrap">
+        <!-- Hero Image Background -->
+        <img src="/assets/images/golf-hit-Preview.webp" 
+             alt="Slither Io - Play Free Online"
+             title="Slither Io"
+             loading="lazy"
+             decoding="async"
+             class="game-background-image">
+        
+        <div class="overlay" id="overlay">
+          <div class="play-button-container">
+            <button id="play-btn" class="btn primary-play-btn" aria-controls="game-frame" aria-label="Load and play Golf Hit now" data-game-url="https://1games.io/game/golf-hit/?cdn=2">
+              <span class="play-icon">▶</span>
+              <span class="play-text">Play Now</span>
+            </button>
+            <noscript>
+              <p style="color: white; text-align: center; margin-top: 1rem;">
+                JavaScript is required to play games. Please enable JavaScript in your browser.
+              </p>
+            </noscript>
+          </div>
+        </div>
+        <button id="exit-full" class="exit-btn" aria-label="Exit full view" title="Exit">✕</button>
+        <iframe id="game-frame" title="Golf Hit Game" loading="lazy" allowfullscreen
+          src="about:blank"
+          sandbox="allow-pointer-lock allow-presentation allow-popups allow-forms"
+        ></iframe>
+      </div>
+    </div>
+  </div>
   
 </section>
 
 
-
-
+<!-- Content Split Container for Desktop -->
+<div class="content-split-container">
+  <div class="article-content-section">
+    
+<section aria-label="Article Content" class="article-section">
+  <div class="container">
+    <article class="main-content">
+      
 <!-- meta: {
   "title": "Golf Hit",
   "description": "Play Golf Hit online! Join superstar gamers in an adventurous quest, unlock magical lands, and swing your way to treasure with easy controls.",
@@ -525,46 +1352,46 @@ summary{cursor:pointer;font-weight:600}
   <li><a href="/geometry-dash2-2/"><span>geometry dash2 2</span></a></li>
 </ul>
 
+    </article>
+  </div>
+</section>
+
+  </div>
+  <div class="games-widget-section">
+    <!-- Games Icon Widget -->
+
+<div class="all-games-widget">
+  <div class="games-icon-grid">
+    
+    <a href="/games/dasdadad.html" class="game-icon-card" title="Golf Hit">
+      <img src="/assets/images/golf-hit-Preview.webp" alt="Golf Hit" loading="lazy" 
+           onerror="this.src='/assets/images/gamelogo.webp'">
+    </a>
+    
+    <a href="/games/ggg.html" class="game-icon-card" title="Golf Hit">
+      <img src="/assets/images/summer-rider-3d.webp" alt="Golf Hit" loading="lazy" 
+           onerror="this.src='/assets/images/gamelogo.webp'">
+    </a>
+    
+    <a href="/games/golf-hit.html" class="game-icon-card" title="Golf Hit">
+      <img src="/assets/images/golf-hit.webp" alt="Golf Hit" loading="lazy" 
+           onerror="this.src='/assets/images/gamelogo.webp'">
+    </a>
+    
+    <a href="/games/qqq.html" class="game-icon-card" title="Golf Hit">
+      <img src="/assets/images/golf-hit.webp" alt="Golf Hit" loading="lazy" 
+           onerror="this.src='/assets/images/gamelogo.webp'">
+    </a>
+    
+  </div>
+</div>
+
+  </div>
+</div>
 
 
 
 
-
-      </div>
-      
-      
-      <aside class="sidebar" role="complementary" aria-label="More Games">
-        <h3>🎮 More Games</h3>
-        <div class="games-widget">
-              
-              <a href="/games/dasdadad.html" class="game-widget-item" title="Play Golf Hit online">
-                <img src="/assets/images/golf-hit.webp" alt="Play Golf Hit - Slither Io" class="game-widget-thumb" loading="lazy" decoding="async" width="50" height="50">
-                <div class="game-widget-title">Golf Hit</div>
-              </a>
-              
-              <a href="/games/ggg.html" class="game-widget-item" title="Play Golf Hit online">
-                <img src="/assets/images/golf-hit.webp" alt="Play Golf Hit - Slither Io" class="game-widget-thumb" loading="lazy" decoding="async" width="50" height="50">
-                <div class="game-widget-title">Golf Hit</div>
-              </a>
-              
-              <a href="/games/golf-hit.html" class="game-widget-item" title="Play Golf Hit online">
-                <img src="/assets/images/golf-hit.webp" alt="Play Golf Hit - Slither Io" class="game-widget-thumb" loading="lazy" decoding="async" width="50" height="50">
-                <div class="game-widget-title">Golf Hit</div>
-              </a>
-              
-              <a href="/games/qqq.html" class="game-widget-item" title="Play Golf Hit online">
-                <img src="/assets/images/golf-hit.webp" alt="Play Golf Hit - Slither Io" class="game-widget-thumb" loading="lazy" decoding="async" width="50" height="50">
-                <div class="game-widget-title">Golf Hit</div>
-              </a>
-              
-        </div>
-        
-        <div style="text-align:center;margin-top:1rem;">
-          <a href="games.html" style="font-size:0.85rem;color:var(--brand);font-weight:500;">View All Games →</a>
-        </div>
-        
-      </aside>
-      
     </div>
   </main>
   
@@ -623,16 +1450,6 @@ summary{cursor:pointer;font-weight:600}
       });
     }
 
-    // Sidebar toggle for mobile
-    const sidebarToggle = document.querySelector('.sidebar-toggle');
-    const sidebar = document.querySelector('.sidebar');
-    if(sidebarToggle && sidebar) {
-      sidebarToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-        const isCollapsed = sidebar.classList.contains('collapsed');
-        sidebarToggle.textContent = isCollapsed ? 'Show Games' : 'Hide Games';
-      });
-    }
 
     // escaperoad.io back-to-top button functionality
     const backToTop = document.getElementById('backToTop');
@@ -678,7 +1495,7 @@ summary{cursor:pointer;font-weight:600}
   
 
 <script>
-// Game loading functionality - Optimized for performance
+// Game loading functionality and sidebar widget - Optimized for performance
 document.addEventListener('DOMContentLoaded', () => {
   const playBtn = document.getElementById('play-btn');
   const gameFrame = document.getElementById('game-frame');
@@ -686,10 +1503,35 @@ document.addEventListener('DOMContentLoaded', () => {
   const overlay = document.getElementById('overlay');
   const exitBtn = document.getElementById('exit-full');
 
+  // All available games for the widget
+  const allGames = [{"image": "/assets/images/img/golf-hit.webp", "title": "Golf Hit", "url": "/games/golf-hit.html"}, {"image": "/assets/images/img/summer-rider-3d.webp", "title": "Golf Hit", "url": "/games/ggg.html"}, {"image": "/assets/images/img/golf-hit-Preview.webp", "title": "Golf Hit", "url": "/games/dasdadad.html"}, {"image": "/assets/images/img/golf-hit.webp", "title": "Golf Hit", "url": "/games/qqq.html"}];
+  const currentGameSlug = '';
+  
+  // Configuration
+  const ROTATION_INTERVAL = 10000; // 10 seconds
+  const DESKTOP_GAMES_PER_SIDEBAR = 6;
+  const TABLET_GAMES_PER_SIDEBAR = 8;
+  const MOBILE_GAMES_PER_SIDEBAR = 6;
+  
+  let rotationIntervals = [];
+
+  // Function to load a game
+  window.loadGame = function(gameUrl) {
+    if (gameFrame && overlay) {
+      gameFrame.src = gameUrl;
+      overlay.style.display = 'none';
+      document.body.classList.add('playing');
+      frameWrap.classList.add('fullscreen');
+      
+      // Scroll to top to show the game
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // Game loading functionality
   if (playBtn && gameFrame) {
     playBtn.addEventListener('click', () => {
       gameFrame.src = 'https://1games.io/game/golf-hit/?cdn=2';
-      // Use requestAnimationFrame to avoid forced reflow
       requestAnimationFrame(() => {
         overlay.style.display = 'none';
         document.body.classList.add('playing');
@@ -712,10 +1554,133 @@ document.addEventListener('DOMContentLoaded', () => {
       frameWrap.classList.remove('fullscreen');
     }
   });
+
+  // Sidebar widget functionality
+  function getRandomGames(exclude = [], count = 6) {
+    if (!Array.isArray(allGames) || allGames.length === 0) {
+      return [];
+    }
+    const available = allGames.filter(game => 
+      game && game.url && game.title && game.image && !exclude.includes(game.url)
+    );
+    const shuffled = [...available].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
+  }
+
+  function createGameIcon(game) {
+    if (!game || !game.image || !game.title || !game.url) {
+      return null;
+    }
+    
+    const icon = document.createElement('div');
+    icon.className = 'game-icon';
+    icon.innerHTML = `<img src="${game.image}" alt="${game.title}" loading="lazy" onerror="this.style.display='none'">`;
+    
+    icon.addEventListener('click', () => {
+      // Navigate to the game page
+      if (game.url) {
+        window.location.href = game.url;
+      }
+    });
+    
+    return icon;
+  }
+
+  function populateSidebar(container, games) {
+    if (!container || !Array.isArray(games)) return;
+    
+    container.innerHTML = '';
+    games.forEach(game => {
+      const icon = createGameIcon(game);
+      if (icon) {
+        container.appendChild(icon);
+      }
+    });
+  }
+
+  function getGamesPerSidebar() {
+    const width = window.innerWidth;
+    if (width >= 1024) return DESKTOP_GAMES_PER_SIDEBAR;
+    if (width >= 768) return TABLET_GAMES_PER_SIDEBAR;
+    return MOBILE_GAMES_PER_SIDEBAR;
+  }
+
+  function initializeSidebars() {
+    const leftSidebar = document.querySelector('[data-sidebar="left"]');
+    const rightSidebar = document.querySelector('[data-sidebar="right"]');
+    const tabletSidebar = document.querySelector('[data-sidebar="tablet"]');
+    const mobileSidebar1 = document.querySelector('[data-sidebar="mobile-1"]');
+    const mobileSidebar2 = document.querySelector('[data-sidebar="mobile-2"]');
+    
+    const gamesPerSidebar = getGamesPerSidebar();
+    
+    if (leftSidebar) {
+      const leftGames = getRandomGames([`.html`], gamesPerSidebar);
+      populateSidebar(leftSidebar, leftGames);
+    }
+    
+    if (rightSidebar) {
+      const rightGames = getRandomGames([`.html`], gamesPerSidebar);
+      populateSidebar(rightSidebar, rightGames);
+    }
+    
+    if (tabletSidebar) {
+      const tabletGames = getRandomGames([`.html`], gamesPerSidebar);
+      populateSidebar(tabletSidebar, tabletGames);
+    }
+    
+    if (mobileSidebar1) {
+      const mobile1Games = getRandomGames([`.html`], gamesPerSidebar);
+      populateSidebar(mobileSidebar1, mobile1Games);
+    }
+    
+    if (mobileSidebar2) {
+      const mobile2Games = getRandomGames([`.html`], gamesPerSidebar);
+      populateSidebar(mobileSidebar2, mobile2Games);
+    }
+  }
+
+  function startRotation() {
+    // Clear existing intervals
+    rotationIntervals.forEach(interval => clearInterval(interval));
+    rotationIntervals = [];
+
+    const sidebars = document.querySelectorAll('[data-sidebar]');
+    
+    sidebars.forEach(sidebar => {
+      const interval = setInterval(() => {
+        const gamesPerSidebar = getGamesPerSidebar();
+        const newGames = getRandomGames([`.html`], gamesPerSidebar);
+        populateSidebar(sidebar, newGames);
+      }, ROTATION_INTERVAL);
+      
+      rotationIntervals.push(interval);
+    });
+  }
+
+  // Initialize sidebars and start rotation
+  if (allGames && allGames.length > 0) {
+    initializeSidebars();
+    startRotation();
+    
+    // Re-initialize on window resize
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        initializeSidebars();
+        startRotation();
+      }, 250);
+    });
+  }
 });
 </script>
 
 
+
+
+<!-- Main JavaScript file -->
+<script src="/assets/js/main.js"></script>
 
 
   

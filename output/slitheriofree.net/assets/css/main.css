@@ -357,30 +357,6 @@ a:hover {
   background-color: var(--gray-50);
 }
 
-/* ==========================================================================
-   Sidebar
-   ========================================================================== */
-.sidebar .card {
-  border: 1px solid var(--gray-200);
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition-normal);
-}
-
-.sidebar .card:hover {
-  box-shadow: var(--shadow-md);
-}
-
-.sidebar .card-header {
-  background-color: var(--gray-50);
-  border-bottom: 1px solid var(--gray-200);
-  padding: var(--space-md);
-}
-
-.sidebar .card-title {
-  color: var(--gray-800);
-  font-weight: 600;
-  font-size: 1.125rem;
-}
 
 /* ==========================================================================
    Footer
@@ -604,10 +580,6 @@ select:focus {
 }
 
 @media (max-width: 991.98px) {
-  .sidebar {
-    margin-top: var(--space-xl);
-  }
-  
   .floating-filter {
     display: none !important;
   }
@@ -619,7 +591,6 @@ select:focus {
 @media print {
   .header,
   .footer,
-  .sidebar,
   .game-controls,
   .floating-filter {
     display: none !important;

@@ -1,0 +1,9 @@
+{% if custom_html_content %}
+<section aria-label="Article Content" class="article-section">
+  <div class="container">
+    <article class="main-content">
+      {{ custom_html_content | safe }}
+    </article>
+  </div>
+</section>
+{% endif %}

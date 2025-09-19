@@ -141,6 +141,73 @@ footer {
 }
 
 
+/* Play Button Styles */
+.btn {
+  display: inline-block;
+  border: 1px solid #ffffff33;
+  color: #fff;
+  background: var(--brand);
+  padding: .5rem .75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+#play-btn,
+.primary-play-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 2rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  border-radius: 999px;
+  font-weight: 700;
+  background: #0ea5e9 !important;
+  color: #000000 !important;
+  box-shadow: 0 6px 18px rgba(14,165,233,.25);
+  transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease;
+  border: none;
+  cursor: pointer;
+}
+
+#play-btn:hover, 
+#play-btn:focus-visible,
+.primary-play-btn:hover, 
+.primary-play-btn:focus-visible {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(2,94,143,.4);
+  background: #0284c7 !important;
+  color: #000000 !important;
+}
+
+.play-icon {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+.play-text {
+  font-weight: 700;
+}
+
+/* Fix overlay text color override */
+.overlay #play-btn,
+.overlay .primary-play-btn,
+.overlay .btn {
+  color: #000000 !important;
+}
+
+.overlay #play-btn .play-icon,
+.overlay #play-btn .play-text,
+.overlay .primary-play-btn .play-icon,
+.overlay .primary-play-btn .play-text {
+  color: #000000 !important;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .hero {
@@ -154,5 +221,12 @@ footer {
   
   .container {
     padding: 0.5rem;
+  }
+  
+  .primary-play-btn {
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    flex-direction: column;
+    gap: 0.5rem;
   }
 }
