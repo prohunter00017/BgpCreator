@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="{{ language }}">
+<html lang="en-US">
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="locale" content="{{ locale }}">
-  <title>{{ page_title }} – {{ site_name }}</title>
-  <meta name="description" content="{{ page_description }}">
-  <link rel="canonical" href="{{ canonical_url }}">
-  <meta name="robots" content="{{ robots_content }}">
+  <meta name="locale" content="en-US">
+  <title>About Us – Slither Io</title>
+  <meta name="description" content="">
+  <link rel="canonical" href="https://slitheriofree.net/pages/about-us.html">
+  <meta name="robots" content="index,follow">
   
   <!-- Core Web Vitals Optimizations -->
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
@@ -21,32 +21,30 @@
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
   
   <!-- Open Graph -->
-  <meta property="og:type" content="{{ og_type }}">
-  <meta property="og:site_name" content="{{ site_name }}">
-  <meta property="og:title" content="{{ page_title }} – {{ site_name }}">
-  <meta property="og:description" content="{{ page_description }}">
-  <meta property="og:url" content="{{ canonical_url }}">
-  <meta property="og:image" content="{{ site_url }}{{ og_image }}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Slither Io">
+  <meta property="og:title" content="About Us – Slither Io">
+  <meta property="og:description" content="">
+  <meta property="og:url" content="https://slitheriofree.net/pages/about-us.html">
+  <meta property="og:image" content="https://slitheriofree.net/assets/images/seo/slither-io.webp">
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{{ page_title }} – {{ site_name }}">
-  <meta name="twitter:description" content="{{ page_description }}">
-  <meta name="twitter:image" content="{{ site_url }}{{ og_image }}">
+  <meta name="twitter:title" content="About Us – Slither Io">
+  <meta name="twitter:description" content="">
+  <meta name="twitter:image" content="https://slitheriofree.net/assets/images/seo/slither-io.webp">
 
   <link rel="manifest" href="/site.webmanifest">
-  <meta name="theme-color" content="{{ theme_color }}">
+  <meta name="theme-color" content="#0369a1">
   
   <!-- Favicon links for different sizes and devices -->
-  {% for favicon in favicon_links %}
-  <link rel="{{ favicon.rel }}" type="{{ favicon.type }}"{% if favicon.sizes %} sizes="{{ favicon.sizes }}"{% endif %} href="{{ favicon.href }}">
-  {% endfor %}
+  
 
   <style>
     /* Critical CSS - Above the fold styles */
     :root{
-      --bg:{{ css_bg }}; --fg:{{ css_fg }}; --muted:{{ css_muted }}; --brand:{{ css_brand }}; --brand-2:{{ css_brand_2 }}; --surface:{{ css_surface }}; --radius:{{ css_radius }};
-      font-family: {{ css_font_family }};
+      --bg:#ffffff; --fg:#0b1220; --muted:#6b7280; --brand:#0369a1; --brand-2:#025e8f; --surface:#f8fafc; --radius:12px;
+      font-family: Inter, Arial, sans-serif;
     }
     *{box-sizing:border-box}
     html:focus-within{scroll-behavior:smooth}
@@ -54,7 +52,7 @@
     a{color:var(--brand);text-decoration:none}
     a:hover{text-decoration:underline}
     :focus{outline:2px solid var(--brand);outline-offset:2px}
-    .container{max-width:{{ container_max_width }};margin-inline:auto;padding:1rem}
+    .container{max-width:1100px;margin-inline:auto;padding:1rem}
     /* escaperoad.io exact header design */
     header{position:sticky;top:0;background:#fff;border-bottom:1px solid #ddd;z-index:1000;box-shadow:0 2px 4px rgba(0,0,0,.1)}
     .topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 0;gap:1rem}
@@ -135,118 +133,171 @@
     .back-to-top.show{opacity:1;visibility:visible}
     .back-to-top:hover{background:#555;transform:translateY(-2px)}
     
-    {% block extra_css %}{% endblock %}
+    
+
+
+
+
   </style>
 
-  {% block extra_head %}{% endblock %}
+  
+<!-- Breadcrumb Schema for SEO -->
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "item": "https://slitheriofree.net/", "name": "Home", "position": 1}, {"@type": "ListItem", "name": "About-Us", "position": 2}]}
+</script>
 
-  {% if organization_schema and organization_schema.name %}
+
+  
   <!-- Schema.org JSON-LD - Organization Schema -->
   <script type="application/ld+json">
-  {{ organization_schema | tojson | safe }}
+  {"@context": "https://schema.org", "@id": "https://slitheriofree.net/#organization", "@type": "Organization", "description": "Play Slither Io online for free! Control your snake, grow with pellets and defeat opponents in this exciting multiplayer io game.", "email": "support@slitheriofree.net", "logo": {"@type": "ImageObject", "height": 1024, "url": "https://slitheriofree.net/logo.png", "width": 1024}, "name": "Slither Io", "sameAs": ["https://slitheriofree.net/pages/about-us.html"], "url": "https://slitheriofree.net/"}
   </script>
-  {% endif %}
   
-  {% if website_schema %}
+  
+  
   <!-- Schema.org JSON-LD - WebSite Schema -->
   <script type="application/ld+json">
-  {{ website_schema | tojson | safe }}
+  {"@context": "https://schema.org", "@id": "https://slitheriofree.net/#website", "@type": "WebSite", "description": "Play Slither Io online for free! Control your snake, grow with pellets and defeat opponents in this exciting multiplayer io game.", "name": "Slither Io", "publisher": {"@id": "https://slitheriofree.net/#organization"}, "url": "https://slitheriofree.net/"}
   </script>
-  {% endif %}
+  
   
   <!-- Custom Head Code (Analytics, Pixels, etc.) -->
-  {% if custom_head_code %}
-  {{ custom_head_code | safe }}
-  {% endif %}
+  
   
   <!-- Google Analytics -->
-  {% if google_analytics_code %}
-  {{ google_analytics_code | safe }}
-  {% endif %}
+  
   
 </head>
 <body>
   <!-- Custom Body Code (Widgets, Popups, etc.) -->
-  {% if custom_body_code %}
-  {{ custom_body_code | safe }}
-  {% endif %}
+  
   
   <a class="skip-link" href="#content">Skip to content</a>
   <header>
     <div class="container topbar" role="banner">
       <div class="brand" aria-label="Site brand">
-        <a href="{% if current_page == 'index' %}{{ site_url.rstrip('/') }}{% else %}/index.html{% endif %}" class="brand-link" {% if current_page == 'index' %}aria-current="page"{% endif %}>
-          <img src="logo.png" alt="Slither io" class="brand-logo">
+        <a href="/index.html" class="brand-link" >
+          <img src="/assets/images/logo.png" alt="Slither io" class="brand-logo">
         </a>
       </div>
       <button id="menu" class="menu-btn" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">Menu</button>
       <nav id="nav" aria-label="Primary">
-        {% set primary = navigation[:5] %}
-        {% set overflow = navigation[5:] %}
+        
+        
         <ul>
-          {% for nav_item in primary %}
-          <li><a class="nav-link" href="{{ nav_item.url }}" {% if current_page == nav_item.key %}aria-current="page"{% endif %}>{{ nav_item.title }}</a></li>
-          {% endfor %}
-          {% if overflow and overflow|length > 0 %}
-          <li class="more" aria-haspopup="true" aria-expanded="false">
-            <button type="button" aria-label="More">More ▾</button>
-            <div class="more-menu" role="menu">
-              {% for nav_item in overflow %}
-              <a class="nav-link" role="menuitem" href="{{ nav_item.url }}" {% if current_page == nav_item.key %}aria-current="page"{% endif %}>{{ nav_item.title }}</a>
-              {% endfor %}
-            </div>
-          </li>
-          {% endif %}
+          
+          <li><a class="nav-link" href="/index.html" >Home</a></li>
+          
+          <li><a class="nav-link" href="/games.html" >Games</a></li>
+          
+          <li><a class="nav-link" href="/pages/about-us.html" >About</a></li>
+          
+          <li><a class="nav-link" href="/pages/contact.html" >Contact</a></li>
+          
+          <li><a class="nav-link" href="/legal/privacy-policy.html" >Privacy</a></li>
+          
+          
         </ul>
       </nav>
     </div>
   </header>
 
   <main id="content" class="container" role="main">
-    {% if breadcrumbs %}
+    
     <nav class="breadcrumbs" aria-label="Breadcrumb">
       <ol style="list-style:none;display:flex;gap:.5rem;padding:0;margin:0">
-        {% for crumb in breadcrumbs %}
+        
         <li>
-          {% if crumb.url %}<a href="{{ crumb.url }}">{{ crumb.title }}</a>{% else %}{{ crumb.title }}{% endif %}
+          <a href="/">Home</a>
         </li>
-        {% if not loop.last %}<li aria-hidden="true">›</li>{% endif %}
-        {% endfor %}
+        <li aria-hidden="true">›</li>
+        
+        <li>
+          About-Us
+        </li>
+        
+        
       </ol>
     </nav>
-    {% endif %}
+    
 
     <div class="main-layout">
       <div class="main-content">
-        {% block content %}{% endblock %}
+        
+<h1>About Us</h1>
+
+
+<h1>Golf Hit</h1>
+<div>
+<h2><strong>Get Ready for an Awesome Adventure!</strong></h2>
+<p>Welcome to the exciting world of Golf Hit! Imagine you're a brave explorer, swinging your way through magical lands. Each swing takes you closer to treasure and adventure. With every hit, you can unlock new worlds and discover hidden secrets. Are you ready to become the ultimate Golf Hit champion? Grab your club and let's get started!</p>
+
+<h3><strong>Easy Peasy Controls!</strong></h3>
+<ul>
+  <li>Swipe left or right to aim your swing.</li>
+  <li>Tap the screen to hit the ball.</li>
+  <li>Hold down to power up your swing!</li>
+</ul>
+
+
+
+
+
+
       </div>
       
-      {% if games and games|length > 0 %}
+      
       <aside class="sidebar" role="complementary" aria-label="More Games">
-        <h3>🎮 {{ sidebar_title }}</h3>
+        <h3>🎮 More Games</h3>
         <div class="games-widget">
-              {% for game in games %}
-              <a href="{{ game.url }}" class="game-widget-item" title="Play {{ game.title }} online">
-                <img src="{{ game.image }}" alt="Play {{ game.title }} - {{ site_name }}" class="game-widget-thumb" loading="lazy" decoding="async" width="50" height="50">
-                <div class="game-widget-title">{{ game.title }}</div>
+              
+              <a href="/games/dasdadad.html" class="game-widget-item" title="Play Golf Hit online">
+                <img src="/assets/images/golf-hit.webp" alt="Play Golf Hit - Slither Io" class="game-widget-thumb" loading="lazy" decoding="async" width="50" height="50">
+                <div class="game-widget-title">Golf Hit</div>
               </a>
-              {% endfor %}
+              
+              <a href="/games/ggg.html" class="game-widget-item" title="Play Golf Hit online">
+                <img src="/assets/images/golf-hit.webp" alt="Play Golf Hit - Slither Io" class="game-widget-thumb" loading="lazy" decoding="async" width="50" height="50">
+                <div class="game-widget-title">Golf Hit</div>
+              </a>
+              
+              <a href="/games/golf-hit.html" class="game-widget-item" title="Play Golf Hit online">
+                <img src="/assets/images/golf-hit.webp" alt="Play Golf Hit - Slither Io" class="game-widget-thumb" loading="lazy" decoding="async" width="50" height="50">
+                <div class="game-widget-title">Golf Hit</div>
+              </a>
+              
+              <a href="/games/golf.html" class="game-widget-item" title="Play Golf Hit online">
+                <img src="/assets/images/golf-hit.webp" alt="Play Golf Hit - Slither Io" class="game-widget-thumb" loading="lazy" decoding="async" width="50" height="50">
+                <div class="game-widget-title">Golf Hit</div>
+              </a>
+              
+              <a href="/games/qqq.html" class="game-widget-item" title="Play Golf Hit online">
+                <img src="/assets/images/golf-hit.webp" alt="Play Golf Hit - Slither Io" class="game-widget-thumb" loading="lazy" decoding="async" width="50" height="50">
+                <div class="game-widget-title">Golf Hit</div>
+              </a>
+              
         </div>
-        {% if games|length > 3 %}
+        
         <div style="text-align:center;margin-top:1rem;">
           <a href="games.html" style="font-size:0.85rem;color:var(--brand);font-weight:500;">View All Games →</a>
         </div>
-        {% endif %}
+        
       </aside>
-      {% endif %}
+      
     </div>
   </main>
   
   <footer role="contentinfo" class="container">
-    <small>© <span id="year">{{ current_year }}</span> {{ site_domain }} · 
-    {% for footer_link in footer_links %}
-    <a href="{{ footer_link.url }}">{{ footer_link.title }}</a>{% if not loop.last %} · {% endif %}
-    {% endfor %}
+    <small>© <span id="year">2025</span> slitheriofree.net · 
+    
+    <a href="/legal/privacy-policy.html">Privacy Policy</a> · 
+    
+    <a href="/legal/terms-of-service.html">Terms of Service</a> · 
+    
+    <a href="/pages/contact.html">Contact</a> · 
+    
+    <a href="/legal/dmca.html">DMCA</a>
+    
     </small>
   </footer>
   
@@ -343,12 +394,9 @@
   }
   </script>
   
-  {% block extra_js %}{% endblock %}
+  
   
   <!-- Custom Footer Code (Analytics, Pixels, etc.) -->
-  {% if custom_footer_code %}
-  {{ custom_footer_code | safe }}
-  {% endif %}
+  
 </body>
 </html>
-

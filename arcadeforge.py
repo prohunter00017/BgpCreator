@@ -1,114 +1,220 @@
 #!/usr/bin/env python3
 """
-ARCADEFORGE - Super Simple Site Generator
-=========================================
+ARCADEFORGE - Multi-Site Static Site Generator
+===============================================
 
-This is the EASIEST way to use ArcadeForge! Just run this script.
+Quick and easy website generation for game sites with multi-site support.
 
-USAGE:
-    python arcadeforge.py             # Generate German site (default)
-    python arcadeforge.py --english   # Generate English site  
-    python arcadeforge.py --french    # Generate French site
-    python arcadeforge.py --dutch     # Generate Dutch site
-    python arcadeforge.py --all       # Generate all languages
+Usage:
+    python arcadeforge.py                    # Generate using legacy mode
+    python arcadeforge.py --site domain.com  # Generate specific site
+    python arcadeforge.py --all             # Generate all sites
+    python arcadeforge.py --list            # List available sites
+    
+What it does:
+- Generates complete websites from your content
+- Supports multiple sites with domain-specific organization
+- Optimizes images automatically  
+- Creates SEO-optimized HTML
+- Handles games and regular pages
 
-EXAMPLES:
-    python arcadeforge.py             # German in 'output' folder
-    python arcadeforge.py --english   # English in 'output-english' folder
-    python arcadeforge.py --all       # All languages in separate folders
+Multi-Site Structure:
+- /sites/domain.com/content_html/    # Site-specific content
+- /sites/domain.com/static/          # Site-specific assets
+- /sites/domain.com/settings.py     # Site-specific config
+- /templates/                       # Shared templates
+- /output/domain.com/               # Site-specific output
 """
 
-import os
 import sys
+import time
 import argparse
+from core.generator import SiteGenerator
+from core.site_loader import list_available_sites, validate_site_name
 
-def main():
-    parser = argparse.ArgumentParser(description='ArcadeForge Site Generator - Super Simple!')
+
+def parse_arguments():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(
+        description='ArcadeForge Multi-Site Static Generator',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python arcadeforge.py                           # Legacy mode (single site)
+  python arcadeforge.py --site slitheriofree.net # Generate specific site
+  python arcadeforge.py --all                    # Generate all sites
+  python arcadeforge.py --list                   # List available sites
+  python arcadeforge.py --site domain.com --output custom/  # Custom output
+        """
+    )
     
-    # Language options
-    parser.add_argument('--english', action='store_true', help='Generate English site')
-    parser.add_argument('--french', action='store_true', help='Generate French site')  
-    parser.add_argument('--dutch', action='store_true', help='Generate Dutch site')
-    parser.add_argument('--german', action='store_true', help='Generate German site')
-    parser.add_argument('--all', action='store_true', help='Generate all languages')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--site', 
+                      help='Generate specific site (domain name)',
+                      metavar='DOMAIN')
+    group.add_argument('--all', 
+                      action='store_true',
+                      help='Generate all sites in /sites/ directory')
+    group.add_argument('--list', 
+                      action='store_true',
+                      help='List all available sites')
     
-    # Output options
-    parser.add_argument('--output', '-o', help='Custom output directory')
-    parser.add_argument('--check', action='store_true', help='Check setup before building')
+    parser.add_argument('--output', 
+                       help='Custom output directory (overrides default)',
+                       metavar='DIR')
     
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def generate_single_site(site=None, output_dir=None):
+    """Generate a single site"""
+    if site:
+        print(f"🚀 Generating {site} → output/{site}")
+    else:
+        print("🚀 Generating en-US → output")
+    print("=" * 60)
     
-    # Check setup if requested
-    if args.check:
-        os.system("python check.py")
+    start_time = time.time()
+    
+    try:
+        # Initialize the site generator
+        generator = SiteGenerator(site=site, output_dir=output_dir)
+        
+        # Generate the website
+        generator.generate_site()
+        generator.create_manifest()
+        generator.create_robots_txt()
+        generator.create_sitemap_xml()
+        
+        # Calculate generation time
+        end_time = time.time()
+        generation_time = end_time - start_time
+        
+        if site:
+            print(f"✅ {site} site ready in '{generator.output_dir}/'")
+        else:
+            print(f"✅ en-US site ready in 'output/'")
+        
+        return True, generation_time
+        
+    except Exception as e:
+        print(f"❌ Error generating {site or 'legacy site'}: {e}")
+        import traceback
+        traceback.print_exc()
+        return False, 0
+
+
+def generate_all_sites():
+    """Generate all available sites"""
+    sites = list_available_sites()
+    
+    if not sites:
+        print("⚠️  No sites found in /sites/ directory")
+        print("   Create site folders like: /sites/domain.com/")
+        return False
+    
+    print(f"🚀 Generating {len(sites)} site(s)")
+    print("=" * 60)
+    
+    total_time = 0
+    successful = 0
+    failed = 0
+    
+    for site in sites:
+        success, gen_time = generate_single_site(site)
+        total_time += gen_time
+        
+        if success:
+            successful += 1
+        else:
+            failed += 1
+        
+        print()  # Empty line between sites
+    
+    print("=" * 60)
+    print(f"🎉 All {successful} site(s) generated successfully!")
+    if failed > 0:
+        print(f"⚠️  {failed} site(s) failed to generate")
+    
+    print(f"\n⏱️  Total generation time: {total_time:.2f} seconds")
+    print(f"📊 Average per site: {total_time/len(sites):.2f} seconds")
+    
+    print("\n🚀 Next steps:")
+    print("   • Test: Open output/<site>/index.html")
+    print("   • Deploy: Upload the output folder(s) to your server")
+    
+    return failed == 0
+
+
+def list_sites():
+    """List all available sites"""
+    sites = list_available_sites()
+    
+    if not sites:
+        print("⚠️  No sites found in /sites/ directory")
+        print("\n📋 To create a new site:")
+        print("   1. Create folder: /sites/domain.com/")
+        print("   2. Add content: /sites/domain.com/content_html/")
+        print("   3. Add assets: /sites/domain.com/static/")
+        print("   4. Add config: /sites/domain.com/settings.py")
         return
     
-    # Import the generator
+    print(f"📋 Available sites ({len(sites)}):")
+    print("=" * 40)
+    
+    for site in sites:
+        print(f"   🌐 {site}")
+    
+    print(f"\n💡 Usage:")
+    print(f"   python arcadeforge.py --site {sites[0]}")
+    print(f"   python arcadeforge.py --all")
+
+
+def main():
+    """Main entry point for ArcadeForge"""
+    args = parse_arguments()
+    
     try:
-        from generate_site import SiteGenerator
-    except ImportError as e:
-        print(f"❌ Error importing generator: {e}")
-        print("💡 Make sure you're in the ArcadeForge directory!")
-        return 1
-    
-    # Determine what to generate
-    languages_to_generate = []
-    
-    if args.all:
-        languages_to_generate = [
-            ('de-DE', 'output-german'),
-            ('en-US', 'output-english'), 
-            ('fr-FR', 'output-french'),
-            ('nl-NL', 'output-dutch')
-        ]
-    else:
-        # Single language
-        if args.english:
-            lang, output_dir = 'en-US', args.output or 'output-english'
-        elif args.french:
-            lang, output_dir = 'fr-FR', args.output or 'output-french'
-        elif args.dutch:
-            lang, output_dir = 'nl-NL', args.output or 'output-dutch'
-        elif args.german:
-            lang, output_dir = 'de-DE', args.output or 'output-german'
-        else:
-            # Default: use config.py setting
-            lang, output_dir = None, args.output or 'output'
+        if args.list:
+            list_sites()
+            return
         
-        languages_to_generate = [(lang, output_dir)]
-    
-    # Generate each language
-    success_count = 0
-    for language, output_dir in languages_to_generate:
-        try:
-            print(f"\n🚀 Generating {language or 'default language'} → {output_dir}")
-            print("=" * 60)
+        if args.site:
+            # Validate site name
+            if not validate_site_name(args.site):
+                print(f"❌ Invalid site name: {args.site}")
+                print("   Site names can only contain letters, numbers, dots, and hyphens")
+                sys.exit(1)
             
-            # Create generator and build
-            generator = SiteGenerator(output_dir=output_dir, language=language)
-            generator.generate_site()
-            generator.create_manifest()
-            generator.create_robots_txt()
-            generator.create_sitemap_xml()
-            
-            print(f"✅ {language or 'Default'} site ready in '{output_dir}/'")
-            success_count += 1
-            
-        except Exception as e:
-            print(f"❌ Failed to generate {language or 'default'}: {e}")
-    
-    # Summary
-    print("\n" + "=" * 60)
-    if success_count == len(languages_to_generate):
-        print(f"🎉 All {success_count} site(s) generated successfully!")
-        print("\n🚀 Next steps:")
-        for _, output_dir in languages_to_generate:
-            print(f"   • Test: Open {output_dir}/index.html")
-        print("   • Deploy: Upload the output folder(s) to your server")
-    else:
-        print(f"⚠️  {success_count}/{len(languages_to_generate)} sites generated successfully")
-    
-    return 0 if success_count == len(languages_to_generate) else 1
+            success, _ = generate_single_site(args.site, args.output)
+            if not success:
+                sys.exit(1)
+        
+        elif args.all:
+            success = generate_all_sites()
+            if not success:
+                sys.exit(1)
+        
+        else:
+            # Legacy mode - single site generation
+            success, generation_time = generate_single_site(output_dir=args.output)
+            if success:
+                print(f"\n⏱️  Generation completed in {generation_time:.2f} seconds")
+                print("\n📋 Next steps:")
+                print("   • Test: Open output/index.html")
+                print("   • Deploy: Upload the output folder(s) to your server")
+            else:
+                sys.exit(1)
+        
+    except KeyboardInterrupt:
+        print("\n⚠️  Generation cancelled by user")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\n❌ Unexpected error: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

@@ -1,27 +1,31 @@
 {% extends "base.html" %}
 
 {% block extra_css %}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,100px);gap:0;padding:0.5rem 0;max-width:100%;justify-content:center}
-.tile{background:var(--surface);border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;transition:transform 0.2s ease,box-shadow 0.2s ease;width:100%;max-width:100px}
-.tile:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-.tile a{display:block;color:inherit;text-decoration:none;padding:0.6rem;text-align:center}
-.thumb{aspect-ratio:1/1;width:100%;object-fit:cover;display:block;border-radius:8px;content-visibility:auto}
-.tile h2{margin:0.3rem 0 0;font-size:0.75rem;font-weight:500;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-align:center}
-.tile p{margin:0;color:var(--css_muted);font-size:0.65rem;line-height:1.2;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;text-align:center}
+/* escaperoad.io exact game grid layout */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,240px);gap:20px;padding:20px 0;max-width:100%;justify-content:center}
+.tile{background:#fff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;transition:transform 0.2s ease,box-shadow 0.2s ease;width:240px;height:auto;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+.tile:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.tile a{display:block;color:inherit;text-decoration:none;padding:0;text-align:center}
+.thumb{aspect-ratio:16/9;width:100%;object-fit:cover;display:block;border-radius:0}
+.tile h2{margin:12px;font-size:14px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-align:left;color:#333}
+.tile p{margin:0 12px 12px;color:#666;font-size:12px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;text-align:left}
 .tile .pad{padding:0}
+/* escaperoad.io responsive grid */
+@media (max-width: 768px) {
+  .grid{grid-template-columns:repeat(auto-fill,200px);gap:15px}
+  .tile{width:200px}
+}
 @media (max-width: 640px) {
-  .grid{grid-template-columns:repeat(auto-fill,85px);gap:0}
-  .tile{max-width:85px}
-  .tile a{padding:0.5rem}
-  .tile h2{font-size:0.7rem;margin:0.25rem 0 0}
-  .tile p{font-size:0.6rem}
+  .grid{grid-template-columns:repeat(auto-fill,180px);gap:12px}
+  .tile{width:180px}
+  .tile h2{font-size:13px;margin:10px}
+  .tile p{font-size:11px;margin:0 10px 10px}
 }
 @media (max-width: 480px) {
-  .grid{grid-template-columns:repeat(auto-fill,75px);gap:0}
-  .tile{max-width:75px}
-  .tile a{padding:0.4rem}
-  .tile h2{font-size:0.65rem}
-  .tile p{font-size:0.55rem}
+  .grid{grid-template-columns:repeat(auto-fill,160px);gap:10px}
+  .tile{width:160px}
+  .tile h2{font-size:12px;margin:8px}
+  .tile p{font-size:10px;margin:0 8px 8px}
 }
 {% endblock %}
 
@@ -31,7 +35,7 @@
   {% for game in games %}
   <div class="tile" role="listitem">
     <a href="{{ game.url }}">
-      <img class="thumb" src="{{ game.image }}" alt="{{ game.title }} cover" loading="lazy" decoding="async" width="100" height="100">
+      <img class="thumb" src="{{ game.image }}" alt="{{ game.title }} cover" loading="lazy" decoding="async" width="240" height="135">
       <h2>{{ game.title }}</h2>
     </a>
   </div>
