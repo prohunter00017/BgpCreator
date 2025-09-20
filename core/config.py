@@ -142,6 +142,10 @@ class SiteConfig:
             "google_analytics_id": self.google_analytics_id,
             "game_embed": {"url": self.game_embed_url},
             "game_name": self.centralized_game_name,
+            # Add ad configuration to context
+            "ads_enabled": getattr(self, 'ads_enabled', False),
+            "ad_networks": getattr(self, 'ad_networks', {}),
+            "ad_sizes": getattr(self, 'ad_sizes', {}),
             "navigation": [
                 {"title": nav_titles["home"], "url": "/index.html", "key": "index"},
                 {"title": nav_titles["games"], "url": "/games.html", "key": "games"},
@@ -245,8 +249,11 @@ class SiteConfig:
     def get_favicon_links(self):
         """Get favicon links with root-absolute paths"""
         return [
-            {"rel": "icon", "type": "image/x-icon", "href": "/assets/images/favicon.ico"},
-            {"rel": "icon", "type": "image/png", "sizes": "32x32", "href": "/assets/icons/favicon-32x32.png"}
+            {"rel": "icon", "type": "image/x-icon", "href": "/favicon.ico"},
+            {"rel": "icon", "type": "image/png", "sizes": "32x32", "href": "/assets/icons/favicon-32x32.png"},
+            {"rel": "icon", "type": "image/png", "sizes": "192x192", "href": "/assets/icons/favicon-192x192.png"},
+            {"rel": "apple-touch-icon", "href": "/assets/icons/favicon-192x192.png"},
+            {"rel": "apple-touch-icon-precomposed", "href": "/assets/icons/favicon-192x192.png"}
         ]
     
     def get_breadcrumb_schema(self, breadcrumbs):
@@ -297,7 +304,7 @@ class SiteConfig:
             faq_schema["inLanguage"] = (self.language or "en-US").split('-')[0]
             return faq_schema
         except FileNotFoundError:
-            print(f"⚠️  Warning: FAQ file not found")
+            pass  # FAQ file is optional
         except json.JSONDecodeError as e:
             print(f"⚠️  Warning: Invalid JSON in FAQ file: {e}")
         except Exception as e:
@@ -435,10 +442,6 @@ class SiteConfig:
             }
         }
     
-    
-    def get_responsive_images(self, image_name):
-        """Get responsive images (minimal implementation)"""
-        return []
     
     def get_image_seo_attributes(self, image_name):
         """Get image SEO attributes"""

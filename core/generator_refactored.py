@@ -5,6 +5,7 @@ Main orchestrator that uses specialized modules for different responsibilities
 """
 
 import os
+import shutil
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader, select_autoescape, ChoiceLoader
 
@@ -53,6 +54,14 @@ class SiteGenerator:
         # Create configuration
         self.config = SiteConfig(language_code=self.language)
         self.config.static_dir = self.static_dir
+        
+        # Add ad configuration from site settings
+        if hasattr(self.site_settings, 'ADS_ENABLED'):
+            self.config.ads_enabled = self.site_settings.ADS_ENABLED
+        if hasattr(self.site_settings, 'AD_NETWORKS'):
+            self.config.ad_networks = self.site_settings.AD_NETWORKS
+        if hasattr(self.site_settings, 'AD_SIZES'):
+            self.config.ad_sizes = self.site_settings.AD_SIZES
         
         # Update site URL if provided
         if site_url:
@@ -168,6 +177,29 @@ class SiteGenerator:
                 os.makedirs(self.output_dir, exist_ok=True)
                 log_info("SiteGenerator", "Output directory ready", "📁")
             
+            # Always copy CSS from templates folder (must happen every build)
+            templates_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
+            templates_css = os.path.join(templates_dir, 'styles.css')
+            if os.path.exists(templates_css):
+                output_templates = os.path.join(self.output_dir, 'templates')
+                os.makedirs(output_templates, exist_ok=True)
+                shutil.copy2(templates_css, os.path.join(output_templates, 'styles.css'))
+                log_info("SiteGenerator", "Copied styles.css from templates folder", "✅")
+            
+            # Generate service worker from template
+            sw_template = os.path.join(templates_dir, 'sw.js')
+            if os.path.exists(sw_template):
+                with open(sw_template, 'r', encoding='utf-8') as f:
+                    sw_content = f.read()
+                # Replace placeholders with site-specific values
+                cache_name = self.config.site_name.lower().replace(' ', '-')
+                sw_content = sw_content.replace('{{ site_name }}', self.config.site_name)
+                sw_content = sw_content.replace('{{ cache_name }}', cache_name)
+                # Write to output root
+                with open(os.path.join(self.output_dir, 'sw.js'), 'w', encoding='utf-8') as f:
+                    f.write(sw_content)
+                log_info("SiteGenerator", "Generated service worker from template", "✅")
+            
             # Check if any files have changed
             if not self.force:
                 with time_operation("change_detection"):
@@ -257,6 +289,13 @@ class SiteGenerator:
                     default_hero_image=self.config.get_dynamic_hero_image()
                 )
                 self._games = games
+            
+            # Generate SEO files (manifest, robots.txt, sitemap.xml)
+            log_phase_start("SiteGenerator", "SEO file generation", "🔍")
+            self.create_manifest()
+            self.create_robots_txt()
+            self.create_sitemap_xml()
+            log_phase_complete("SiteGenerator", "SEO file generation", 0.0, "✅")
             
             # Save the build cache
             self.build_cache.save_cache()

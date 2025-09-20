@@ -26,6 +26,53 @@ CONTACT_PHONE = "+1-555-123-4567"
 GOOGLE_ANALYTICS_ID = "G-FGRWDEFQY4"
 
 # =============================================================================
+# AD PLACEMENT SETTINGS
+# =============================================================================
+
+# Enable/disable ads globally
+ADS_ENABLED = True  # Set to False to disable all ads
+
+# Ad network configuration (supports multiple networks)
+AD_NETWORKS = {
+    "ezoic": {
+        "enabled": True,
+        "placeholder_ids": {
+            "before_game": "ezoic-pub-ad-placeholder-100",
+            "after_game": "ezoic-pub-ad-placeholder-101", 
+            "left_sidebar": "ezoic-pub-ad-placeholder-102",
+            "right_sidebar": "ezoic-pub-ad-placeholder-103"
+        }
+    },
+    "google_adsense": {
+        "enabled": False,
+        "publisher_id": "ca-pub-XXXXXXXXXXXXX",  # Replace with your AdSense publisher ID
+        "slots": {
+            "before_game": "1234567890",
+            "after_game": "2345678901",
+            "left_sidebar": "3456789012",
+            "right_sidebar": "4567890123"
+        }
+    },
+    "custom": {
+        "enabled": False,
+        "html": {
+            "before_game": "<!-- Custom ad code here -->",
+            "after_game": "<!-- Custom ad code here -->",
+            "left_sidebar": "<!-- Custom ad code here -->",
+            "right_sidebar": "<!-- Custom ad code here -->"
+        }
+    }
+}
+
+# Ad sizes for different positions (width x height in pixels)
+AD_SIZES = {
+    "before_game": {"width": 728, "height": 90},     # Leaderboard
+    "after_game": {"width": 728, "height": 90},      # Leaderboard
+    "left_sidebar": {"width": 160, "height": 600},   # Wide Skyscraper
+    "right_sidebar": {"width": 160, "height": 600}   # Wide Skyscraper
+}
+
+# =============================================================================
 # LANGUAGE SETTINGS - CHANGE THIS LINE TO SWITCH LANGUAGES!
 # =============================================================================
 
@@ -201,7 +248,10 @@ def get_site_config():
         "founder_info": FOUNDER_INFO,
         "company_address": COMPANY_ADDRESS,
         "image_sizes": IMAGE_SIZES,
-        "site_pages": SITE_PAGES
+        "site_pages": SITE_PAGES,
+        "ads_enabled": ADS_ENABLED,
+        "ad_networks": AD_NETWORKS,
+        "ad_sizes": AD_SIZES
     }
 
 

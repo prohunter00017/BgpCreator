@@ -98,7 +98,11 @@ class PageBuilder:
                 "hero_image": game["hero_image"],
                 "custom_html_content": game["content_html"],
                 "games": games_list,
-                "sidebar_title": "More Games"
+                "sidebar_title": "More Games",
+                # Add ad placement configuration
+                "ads_enabled": context_base.get("ads_enabled", False),
+                "ad_networks": context_base.get("ad_networks", {}),
+                "ad_sizes": context_base.get("ad_sizes", {})
             }
             
             # Render template

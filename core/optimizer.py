@@ -158,14 +158,14 @@ class ImageOptimizer:
         return 1
     
     def _add_site_name_to_image(self, input_path, image_name, config):
-        """Add site name to existing hero image"""
+        """Optimize hero image"""
         try:
             with Image.open(input_path) as img:
                 # Convert to RGB if necessary
                 if img.mode in ('RGBA', 'LA', 'P'):
                     img = img.convert('RGB')
                 
-                # Save the image without any text overlay
+                # Optimize and save the image
                 img.save(input_path, 'WEBP', quality=85, optimize=True)
                 print(f"  ✅ Optimized image: {image_name}.webp")
                 
@@ -669,9 +669,8 @@ class ImageOptimizer:
             return image
 
     def _save_updated_config(self):
-        """Save updated configuration with SEO attributes - simplified system doesn't need this"""
-        # Skip saving to seo_config.json since we use the simplified system
-        print("  ✅ SEO attributes generated (simplified system - no external config needed)")
+        """SEO attributes are generated inline - no external config needed"""
+        pass
     
     def _process_favicon_sizes_parallel(self, favicon_tasks: List[Tuple]) -> None:
         """

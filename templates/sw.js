@@ -1,10 +1,10 @@
-// Service Worker for Slither Io
-// Enhanced caching strategy with cache busting
+// Service Worker for {{ site_name }}
+// Progressive Web App caching strategy with automatic cache management
 
-const CACHE_NAME = 'slither-io-v2'; // Updated version to force cache clear
+const CACHE_NAME = '{{ cache_name }}-v1';
 const urlsToCache = [
   '/',
-  '/assets/css/styles.css?v=2', // Added version parameter
+  '/templates/styles.css',
   '/assets/js/main.js',
   '/logo.png',
   '/favicon.ico'
@@ -30,7 +30,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           // Delete all old caches that don't match current version
-          if (cacheName !== CACHE_NAME && cacheName.startsWith('slither-io-')) {
+          if (cacheName !== CACHE_NAME && cacheName.startsWith('{{ cache_name }}-')) {
             console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
