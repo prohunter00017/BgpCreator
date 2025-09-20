@@ -50,11 +50,16 @@ INDEX_SEO_KEYWORDS = "slither io, io games, free play, snake game, multiplayer o
 
 # Social media links (optional - leave empty if not needed)
 SOCIAL_MEDIA = {
-    "facebook": "https://www.facebook.com/slitheriofree",
-    "twitter": "https://twitter.com/slitheriofree",
-    "youtube": "https://www.youtube.com/@slitheriofree",
-    "app_store": "https://apps.apple.com/us/app/slither-io/id1091944550",
-    "play_store": "https://play.google.com/store/apps/details?id=air.com.hypah.io.slither&hl=en&gl=US"
+    "facebook":
+    "https://www.facebook.com/slitheriofree",
+    "twitter":
+    "https://twitter.com/slitheriofree",
+    "youtube":
+    "https://www.youtube.com/@slitheriofree",
+    "app_store":
+    "https://apps.apple.com/us/app/slither-io/id1091944550",
+    "play_store":
+    "https://play.google.com/store/apps/details?id=air.com.hypah.io.slither&hl=en&gl=US"
 }
 
 # SEO filename (used for image names and URLs)
@@ -83,52 +88,99 @@ COMPANY_ADDRESS = {
 # =============================================================================
 
 # Image optimization settings
-IMAGE_SIZES = [
-    {"name": "mobile", "width": 480, "height": 270},
-    {"name": "tablet", "width": 768, "height": 432},
-    {"name": "desktop", "width": 1200, "height": 675},
-    {"name": "large", "width": 1920, "height": 1080}
-]
+IMAGE_SIZES = [{
+    "name": "mobile",
+    "width": 480,
+    "height": 270
+}, {
+    "name": "tablet",
+    "width": 768,
+    "height": 432
+}, {
+    "name": "desktop",
+    "width": 1200,
+    "height": 675
+}, {
+    "name": "large",
+    "width": 1920,
+    "height": 1080
+}]
 
 # Site pages and their priorities for sitemap
 SITE_PAGES = [
-    {"url": "", "priority": "1.0", "changefreq": "daily"},  # Homepage
-    {"url": "pages/about-us.html", "priority": "0.8", "changefreq": "monthly"},
-    {"url": "pages/contact.html", "priority": "0.7", "changefreq": "monthly"},
-    {"url": "legal/privacy-policy.html", "priority": "0.5", "changefreq": "yearly"},
-    {"url": "legal/terms-of-service.html", "priority": "0.5", "changefreq": "yearly"},
-    {"url": "legal/cookies-policy.html", "priority": "0.5", "changefreq": "yearly"},
-    {"url": "legal/dmca.html", "priority": "0.3", "changefreq": "yearly"},
-    {"url": "legal/parents-information.html", "priority": "0.6", "changefreq": "monthly"}
+    {
+        "url": "",
+        "priority": "1.0",
+        "changefreq": "daily"
+    },  # Homepage
+    {
+        "url": "pages/about-us.html",
+        "priority": "0.8",
+        "changefreq": "monthly"
+    },
+    {
+        "url": "pages/contact.html",
+        "priority": "0.7",
+        "changefreq": "monthly"
+    },
+    {
+        "url": "legal/privacy-policy.html",
+        "priority": "0.5",
+        "changefreq": "yearly"
+    },
+    {
+        "url": "legal/terms-of-service.html",
+        "priority": "0.5",
+        "changefreq": "yearly"
+    },
+    {
+        "url": "legal/cookies-policy.html",
+        "priority": "0.5",
+        "changefreq": "yearly"
+    },
+    {
+        "url": "legal/dmca.html",
+        "priority": "0.3",
+        "changefreq": "yearly"
+    },
+    {
+        "url": "legal/parents-information.html",
+        "priority": "0.6",
+        "changefreq": "monthly"
+    }
 ]
 
 # =============================================================================
 # HELPER FUNCTIONS (don't edit these)
 # =============================================================================
 
+
 def get_page_title(page_key, language_code=None):
     """Get page title - index from config, others from page_content.py"""
     if page_key == "index":
         return INDEX_TITLE
-    
+
     # English only - simplified (page_content.py was removed)
     return page_key.replace('-', ' ').title()
+
 
 def get_page_description(page_key, language_code=None):
     """Get page description - index from config, others from page_content.py"""
     if page_key == "index":
         return INDEX_DESCRIPTION
-    
+
     # English only - simplified (page_content.py was removed)
     return ""
+
 
 def get_seo_keywords(page_key, language_code=None):
     """Get SEO keywords - only index has keywords (keep it simple)"""
     if page_key == "index":
         return INDEX_SEO_KEYWORDS
-    
+
     # No keywords for other pages - keep it simple
     return ""
+
 
 def get_site_config():
     """Get all configuration as a dictionary"""
@@ -151,6 +203,7 @@ def get_site_config():
         "image_sizes": IMAGE_SIZES,
         "site_pages": SITE_PAGES
     }
+
 
 if __name__ == "__main__":
     import json

@@ -31,8 +31,9 @@
         </div>
         <button id="exit-full" class="exit-btn" aria-label="Exit full view" title="Exit">✕</button>
         <iframe id="game-frame" title="{{ game_name }} Game" loading="lazy" allowfullscreen
-          src="about:blank"
-          sandbox="allow-pointer-lock allow-presentation allow-popups allow-forms"
+          allow="autoplay; fullscreen; clipboard-read; clipboard-write; encrypted-media; gamepad"
+          sandbox="allow-pointer-lock allow-presentation allow-popups allow-forms allow-same-origin allow-scripts"
+          src="{{ game_url }}"
         ></iframe>
       </div>
     </div>

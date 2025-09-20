@@ -7,12 +7,20 @@ Generates multiple image sizes, formats, and SEO-optimized markup.
 import os
 import json
 import shutil
+import time
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
+from typing import List, Tuple, Dict, Callable, Any
+from threading import Lock
 from PIL import Image, ImageOps
 from .site_loader import get_project_root, abs_path
+from .performance_logger import (
+    logger, time_operation, log_info, log_success, log_warn, log_error,
+    log_phase_start, log_phase_complete, update_stats
+)
 
 class ImageOptimizer:
-    def __init__(self, input_dir="static", output_dir="output"):
+    def __init__(self, input_dir="static", output_dir="output", max_workers=None, build_cache=None):
         # Convert to absolute paths to avoid CWD dependencies (cross-platform)
         if not os.path.isabs(input_dir):
             self.input_dir = str(abs_path(input_dir))
@@ -25,6 +33,14 @@ class ImageOptimizer:
             self.output_dir = str(Path(output_dir).resolve())
             
         self.image_config = self._load_image_config()
+        self.force = False  # Default to incremental builds
+        self.build_cache = build_cache  # For coordinating with AssetManager
+        
+        # Configure max workers for parallel processing (default: min(32, cpu_count() + 4))
+        cpu_count = os.cpu_count() or 4  # Fallback to 4 if cpu_count() returns None
+        self.max_workers = max_workers if max_workers is not None else min(32, cpu_count + 4)
+        # Thread-safe stats aggregation
+        self._stats_lock = Lock()
         
     def _load_image_config(self):
         """Load image configuration from seo_config.json (cross-platform)"""
@@ -37,23 +53,67 @@ class ImageOptimizer:
         except FileNotFoundError:
             return {}
     
-    def optimize_all_images(self):
-        """Optimize all images for SEO"""
-        print("🖼️  Starting image optimization for SEO...")
+    def _needs_processing(self, source_path, target_path):
+        """Check if image processing is needed based on modification times"""
+        try:
+            if self.force:
+                return True
+                
+            if not os.path.exists(target_path):
+                return True  # Target doesn't exist, processing needed
+            
+            source_mtime = os.path.getmtime(source_path)
+            target_mtime = os.path.getmtime(target_path)
+            
+            # Process if source is newer than target
+            return source_mtime > target_mtime
+        except OSError:
+            return True  # Error accessing files, assume processing needed
+    
+    def optimize_all_images(self, force=False):
+        """Optimize all images for SEO with parallel processing and incremental build support"""
+        optimization_timer = logger.start_timing("image_optimization")
+        self.force = force
+        
+        if force:
+            log_phase_start("ImageOptimizer", f"full image optimization (forced) with {self.max_workers} workers", "🖼️")
+        else:
+            log_phase_start("ImageOptimizer", f"incremental image optimization with {self.max_workers} workers", "🖼️")
         
         # Create output directory
         os.makedirs(self.output_dir, exist_ok=True)
         
-        # Process each image type
-        self._optimize_hero_images()
-        self._optimize_favicon()
-        self._optimize_game_logo()
-        self._generate_og_images()
-        self._generate_pwa_icons()
-        self._generate_pwa_screenshots()
-        self._generate_seo_attributes()
+        # Define image processing tasks that can be parallelized
+        image_tasks = [
+            ('hero_images', self._optimize_hero_images),
+            ('favicon', self._optimize_favicon),
+            ('game_logo', self._optimize_game_logo),
+            ('og_images', self._generate_og_images),
+            ('pwa_icons', self._generate_pwa_icons),
+            ('pwa_screenshots', self._generate_pwa_screenshots),
+            ('seo_attributes', self._generate_seo_attributes)
+        ]
         
-        print("✅ Image optimization complete!")
+        # Execute image processing tasks in parallel
+        processed_count = self._execute_parallel_image_tasks(image_tasks)
+        
+        # Calculate and log performance metrics
+        optimization_duration = logger.stop_timing(optimization_timer)
+        
+        if processed_count > 0 or force:
+            processing_rate = logger.calculate_processing_rate(processed_count, optimization_duration) if optimization_duration else 0
+            update_stats("image_optimization",
+                       files_processed=processed_count,
+                       processing_rate=processing_rate,
+                       parallel_workers=self.max_workers,
+                       memory_usage_mb=logger.get_memory_usage())
+            
+            log_phase_complete("ImageOptimizer", "image optimization", optimization_duration or 0, "✅",
+                             files_processed=processed_count,
+                             processing_rate=processing_rate)
+        else:
+            log_info("ImageOptimizer", "Images up to date - no processing needed", "⚡")
+            update_stats("image_optimization", cache_hits=1)
     
     def _optimize_hero_images(self):
         """Use original hero images with SEO-optimized names"""
@@ -63,28 +123,39 @@ class ImageOptimizer:
         # Look for original hero images in static folder (cross-platform)
         hero_image_path = Path(self.input_dir) / "hero-image.webp"
         
-        if hero_image_path.exists():
-            print("📸 Using original hero image: hero-image.webp")
-            
-            # Add site name to the original image
-            self._add_site_name_to_image(hero_image_path, "hero-image", {})
-            
-            # Create organized SEO images directory (cross-platform)
-            seo_dir = Path(self.output_dir) / "assets" / "images" / "seo"
-            seo_dir.mkdir(parents=True, exist_ok=True)
-            
-            # Copy the original image with SEO-optimized name to organized location
-            seo_image_path = seo_dir / f"{seo_filename}.webp"
-            shutil.copy2(str(hero_image_path), str(seo_image_path))
-            
-            print(f"  ✅ Copied to SEO-optimized name: {seo_filename}.webp in /assets/images/seo/")
-            
-            # Update the schema to use the SEO-optimized filename
-            self._update_hero_image_schema(seo_filename)
-            
-        else:
+        if not hero_image_path.exists():
             print(f"⚠️  No original hero image found at: {hero_image_path}")
             print("  Please add your hero image as 'hero-image.webp' in the static folder")
+            return 0
+        
+        # Create organized SEO images directory (cross-platform)
+        seo_dir = Path(self.output_dir) / "assets" / "images" / "seo"
+        seo_dir.mkdir(parents=True, exist_ok=True)
+        seo_image_path = seo_dir / f"{seo_filename}.webp"
+        
+        # Check if processing is needed
+        if not self._needs_processing(str(hero_image_path), str(seo_image_path)):
+            print("📸 Hero image: up to date")
+            return 0
+        
+        print("📸 Processing hero image: hero-image.webp")
+        
+        # Add site name to the original image
+        self._add_site_name_to_image(hero_image_path, "hero-image", {})
+        
+        # Copy the original image with SEO-optimized name to organized location
+        shutil.copy2(str(hero_image_path), str(seo_image_path))
+        
+        print(f"  ✅ Copied to SEO-optimized name: {seo_filename}.webp in /assets/images/seo/")
+        
+        # Register the source image as processed to avoid duplication by AssetManager
+        if self.build_cache:
+            self.build_cache.register_processed_image(str(hero_image_path))
+        
+        # Update the schema to use the SEO-optimized filename
+        self._update_hero_image_schema(seo_filename)
+        
+        return 1
     
     def _add_site_name_to_image(self, input_path, image_name, config):
         """Add site name to existing hero image"""
@@ -125,10 +196,17 @@ class ImageOptimizer:
         favicon_path = os.path.join(self.input_dir, "favicon.ico")
         if not os.path.exists(favicon_path):
             print("⚠️  Favicon not found, creating default")
-            self._create_default_favicon()
-            return
+            return self._create_default_favicon()
         
-        print("📱 Optimizing favicon...")
+        # Check if favicon processing is needed
+        icons_dir = os.path.join(self.output_dir, "assets", "icons")
+        test_icon_path = os.path.join(icons_dir, "favicon-32x32.png")
+        
+        if not self._needs_processing(favicon_path, test_icon_path):
+            print("📱 Favicon: up to date")
+            return 0
+        
+        print("📱 Processing favicon...")
         
         # Create organized icons directory
         icons_dir = os.path.join(self.output_dir, "assets", "icons")
@@ -140,37 +218,79 @@ class ImageOptimizer:
                 if img.mode != 'RGBA':
                     img = img.convert('RGBA')
                 
-                # Generate multiple sizes
+                # Generate multiple sizes in parallel
                 favicon_sizes = [16, 32, 48, 64, 128, 192, 256, 512]
                 
-                for size in favicon_sizes:
-                    resized = img.resize((size, size), Image.Resampling.LANCZOS)
-                    
-                    # Save as PNG in organized directory
-                    png_path = os.path.join(icons_dir, f"favicon-{size}x{size}.png")
-                    resized.save(png_path, "PNG", optimize=True)
-                    
-                    # Save as ICO for specific sizes in organized directory
-                    if size in [16, 32, 48]:
-                        ico_path = os.path.join(icons_dir, f"favicon-{size}x{size}.ico")
-                        resized.save(ico_path, "ICO")
+                # Create tasks for parallel favicon generation
+                favicon_tasks = [(img.copy(), size, icons_dir) for size in favicon_sizes]
+                
+                # Process favicon sizes in parallel using ThreadPoolExecutor
+                self._process_favicon_sizes_parallel(favicon_tasks)
                 
                 # Copy original favicon to root (required for browser fallback)
                 shutil.copy2(favicon_path, os.path.join(self.output_dir, "favicon.ico"))
                 
                 print(f"  ✅ Generated favicon in {len(favicon_sizes)} sizes (organized in /assets/icons/)")
                 
+                # Register the source image as processed to avoid duplication by AssetManager
+                if self.build_cache:
+                    self.build_cache.register_processed_image(favicon_path)
+                
         except Exception as e:
             print(f"❌ Error optimizing favicon: {e}")
+            return 0
+        
+        return 1  # Return 1 to indicate successful processing
+    
+    def _execute_parallel_image_tasks(self, image_tasks: List[Tuple[str, Callable]]) -> int:
+        """
+        Execute image processing tasks in parallel using ThreadPoolExecutor.
+        
+        Args:
+            image_tasks: List of (task_name, task_function) tuples
+            
+        Returns:
+            Total number of processed operations
+        """
+        total_processed = 0
+        
+        # Use ThreadPoolExecutor for I/O-bound image operations
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            # Submit all image processing tasks
+            future_to_task = {executor.submit(task_func): task_name 
+                             for task_name, task_func in image_tasks}
+            
+            # Process completed tasks
+            for future in as_completed(future_to_task):
+                task_name = future_to_task[future]
+                try:
+                    result = future.result()
+                    with self._stats_lock:
+                        total_processed += result
+                except Exception as e:
+                    print(f"⚠️  Error in image task '{task_name}': {e}")
+                    # Continue processing other tasks
+        
+        return total_processed
     
     def _optimize_game_logo(self):
         """Optimize game logo and create SEO-renamed version"""
         gamelogo_path = os.path.join(self.input_dir, "gamelogo.webp")
         if not os.path.exists(gamelogo_path):
             print("⚠️  Game logo not found: gamelogo.webp")
-            return
+            return 0
         
-        print("🎮 Optimizing game logo...")
+        # Check if game logo processing is needed
+        site_name = self._get_site_name()
+        seo_filename = site_name.lower().replace(" ", "-").replace("_", "-")
+        logo_filename = f"{seo_filename}-logo.webp"
+        output_path = os.path.join(self.output_dir, logo_filename)
+        
+        if not self._needs_processing(gamelogo_path, output_path):
+            print("🎮 Game logo: up to date")
+            return 0
+        
+        print("🎮 Processing game logo...")
         
         try:
             # Get site name for SEO filename
@@ -202,8 +322,15 @@ class ImageOptimizer:
                 
                 print(f"  ✅ Generated game logo: {logo_filename} (also in /assets/images/logos/)")
                 
+                # Register the source image as processed to avoid duplication by AssetManager
+                if self.build_cache:
+                    self.build_cache.register_processed_image(gamelogo_path)
+                
         except Exception as e:
             print(f"❌ Error optimizing game logo: {e}")
+            return 0
+        
+        return 1  # Return 1 to indicate successful processing
     
     def _create_default_favicon(self):
         """Create a default favicon if none exists with organized structure"""
@@ -228,6 +355,9 @@ class ImageOptimizer:
         favicon.save(ico_path, "ICO")
         
         print("  ✅ Created default favicon (organized in /assets/icons/)")
+        
+        # Return 1 to indicate processing was done
+        return 1
     
     def _generate_og_images(self):
         """Generate Open Graph images for social sharing"""
@@ -258,6 +388,8 @@ class ImageOptimizer:
                     
             except Exception as e:
                 print(f"❌ Error generating OG image {image_name}: {e}")
+        
+        return 1  # Return 1 to indicate processing was attempted
     
     def generate_image_manifest(self):
         """Generate a manifest of all optimized images"""
@@ -290,12 +422,15 @@ class ImageOptimizer:
                     "path": file
                 }
         
-        # Save manifest
-        manifest_path = os.path.join(self.output_dir, "image_manifest.json")
+        # Save manifest to internal directory (not public root for security)
+        # SECURITY: Store image manifest in internal build directory, not public root
+        internal_dir = os.path.join(self.output_dir, ".internal")
+        os.makedirs(internal_dir, exist_ok=True)
+        manifest_path = os.path.join(internal_dir, "image_manifest.json")
         with open(manifest_path, 'w', encoding='utf-8') as f:
             json.dump(manifest, f, indent=2)
         
-        print(f"📋 Generated image manifest: {manifest_path}")
+        print(f"📋 Generated image manifest: {manifest_path} (internal build metadata)")
     
     def _generate_seo_attributes(self):
         """Generate SEO attributes for all images"""
@@ -321,6 +456,7 @@ class ImageOptimizer:
             self._update_og_image_seo_attributes(image_name, config, site_name)
         
         print("  ✅ SEO attributes generated for all images")
+        return 1  # Return 1 to indicate successful processing
     
     def _update_image_seo_attributes(self, image_name, config, site_name):
         """Update SEO attributes for hero images"""
@@ -374,7 +510,7 @@ class ImageOptimizer:
         
         if not source_icon_path:
             print("⚠️  No source icon found for PWA icons")
-            return
+            return 0
         
         try:
             with Image.open(source_icon_path) as img:
@@ -433,6 +569,9 @@ class ImageOptimizer:
                 
         except Exception as e:
             print(f"❌ Error generating PWA icons: {e}")
+            return 0
+        
+        return 1  # Return 1 to indicate successful processing
     
     def _generate_pwa_screenshots(self):
         """Generate PWA screenshots for different device form factors"""
@@ -446,7 +585,7 @@ class ImageOptimizer:
         
         if not os.path.exists(source_image_path):
             print("⚠️  No source image found for PWA screenshots")
-            return
+            return 0
         
         try:
             with Image.open(source_image_path) as img:
@@ -485,6 +624,9 @@ class ImageOptimizer:
                 
         except Exception as e:
             print(f"❌ Error generating PWA screenshots: {e}")
+            return 0
+        
+        return 1  # Return 1 to indicate successful processing
     
     def _add_device_frame(self, image, config):
         """Add a device frame to the screenshot for better presentation"""
@@ -513,8 +655,8 @@ class ImageOptimizer:
             
             # Draw rounded rectangle border
             draw.rounded_rectangle(
-                [frame_padding-2, frame_padding-2, 
-                 canvas_width-frame_padding+2, canvas_height-frame_padding+2],
+                (frame_padding-2, frame_padding-2, 
+                 canvas_width-frame_padding+2, canvas_height-frame_padding+2),
                 radius=corner_radius,
                 outline=(100, 100, 100) if config["form_factor"] == "narrow" else (200, 200, 200),
                 width=2
@@ -530,6 +672,155 @@ class ImageOptimizer:
         """Save updated configuration with SEO attributes - simplified system doesn't need this"""
         # Skip saving to seo_config.json since we use the simplified system
         print("  ✅ SEO attributes generated (simplified system - no external config needed)")
+    
+    def _process_favicon_sizes_parallel(self, favicon_tasks: List[Tuple]) -> None:
+        """
+        Process favicon sizes in parallel for better performance.
+        
+        Args:
+            favicon_tasks: List of (img, size, icons_dir) tuples
+        """
+        def process_single_favicon(task):
+            img, size, icons_dir = task
+            try:
+                resized = img.resize((size, size), Image.Resampling.LANCZOS)
+                
+                # Save as PNG in organized directory
+                png_path = os.path.join(icons_dir, f"favicon-{size}x{size}.png")
+                resized.save(png_path, "PNG", optimize=True)
+                
+                # Save as ICO for specific sizes in organized directory
+                if size in [16, 32, 48]:
+                    ico_path = os.path.join(icons_dir, f"favicon-{size}x{size}.ico")
+                    resized.save(ico_path, "ICO")
+                
+                return f"favicon-{size}x{size}"
+            except Exception as e:
+                print(f"⚠️  Error processing favicon size {size}: {e}")
+                return None
+        
+        # Use ThreadPoolExecutor for parallel favicon processing (I/O bound operations)
+        with ThreadPoolExecutor(max_workers=min(self.max_workers, len(favicon_tasks))) as executor:
+            # Submit all favicon tasks
+            futures = [executor.submit(process_single_favicon, task) for task in favicon_tasks]
+            
+            # Process completed tasks
+            for future in as_completed(futures):
+                try:
+                    result = future.result()
+                    if result:
+                        print(f"  ✅ Generated {result} (in organized directory)")
+                except Exception as e:
+                    print(f"⚠️  Error in favicon parallel processing: {e}")
+    
+    def _process_pwa_icons_parallel(self, pwa_tasks: List[Tuple]) -> None:
+        """
+        Process PWA icons in parallel for better performance.
+        
+        Args:
+            pwa_tasks: List of (img, icon_config, seo_filename, output_dir) tuples
+        """
+        def process_single_pwa_icon(task):
+            img, icon_config, seo_filename, output_dir = task
+            try:
+                size = icon_config["size"]
+                purpose = icon_config["purpose"]
+                
+                # Resize image
+                resized = img.resize((size, size), Image.Resampling.LANCZOS)
+                
+                # For maskable icons, add padding for safe area
+                if purpose == "maskable":
+                    # Create a larger canvas with padding
+                    padding = size // 10  # 10% padding
+                    canvas_size = size + (padding * 2)
+                    canvas = Image.new('RGBA', (canvas_size, canvas_size), (0, 0, 0, 0))
+                    
+                    # Center the icon on the canvas
+                    canvas.paste(resized, (padding, padding))
+                    final_icon = canvas
+                else:
+                    final_icon = resized
+                
+                # Create organized PWA directory
+                pwa_dir = os.path.join(output_dir, "assets", "pwa")
+                os.makedirs(pwa_dir, exist_ok=True)
+                
+                # Save as PNG in organized directory
+                filename = f"{seo_filename}-icon-{size}x{size}"
+                if purpose == "maskable":
+                    filename += "-maskable"
+                filename += ".png"
+                
+                output_path = os.path.join(pwa_dir, filename)
+                final_icon.save(output_path, "PNG", optimize=True)
+                
+                return filename
+            except Exception as e:
+                print(f"⚠️  Error processing PWA icon {icon_config}: {e}")
+                return None
+        
+        # Use ThreadPoolExecutor for parallel PWA icon processing
+        with ThreadPoolExecutor(max_workers=min(self.max_workers, len(pwa_tasks))) as executor:
+            # Submit all PWA icon tasks
+            futures = [executor.submit(process_single_pwa_icon, task) for task in pwa_tasks]
+            
+            # Process completed tasks
+            for future in as_completed(futures):
+                try:
+                    result = future.result()
+                    if result:
+                        print(f"  ✅ Generated {result} (in /assets/pwa/)")
+                except Exception as e:
+                    print(f"⚠️  Error in PWA icon parallel processing: {e}")
+    
+    def _process_pwa_screenshots_parallel(self, screenshot_tasks: List[Tuple]) -> None:
+        """
+        Process PWA screenshots in parallel for better performance.
+        
+        Args:
+            screenshot_tasks: List of (img, config, seo_filename, output_dir) tuples
+        """
+        def process_single_screenshot(task):
+            img, config, seo_filename, output_dir = task
+            try:
+                width = config["width"]
+                height = config["height"]
+                name = config["name"]
+                
+                # Resize image maintaining aspect ratio and crop to fit
+                resized = ImageOps.fit(img, (width, height), Image.Resampling.LANCZOS)
+                
+                # Add device frame for better presentation
+                screenshot = self._add_device_frame(resized, config)
+                
+                # Create organized PWA directory
+                pwa_dir = os.path.join(output_dir, "assets", "pwa")
+                os.makedirs(pwa_dir, exist_ok=True)
+                
+                # Save as PNG in organized directory
+                filename = f"{seo_filename}-screenshot-{name}.png"
+                output_path = os.path.join(pwa_dir, filename)
+                screenshot.save(output_path, "PNG", optimize=True)
+                
+                return filename
+            except Exception as e:
+                print(f"⚠️  Error processing PWA screenshot {config}: {e}")
+                return None
+        
+        # Use ThreadPoolExecutor for parallel screenshot processing 
+        with ThreadPoolExecutor(max_workers=min(self.max_workers, len(screenshot_tasks))) as executor:
+            # Submit all screenshot tasks
+            futures = [executor.submit(process_single_screenshot, task) for task in screenshot_tasks]
+            
+            # Process completed tasks
+            for future in as_completed(futures):
+                try:
+                    result = future.result()
+                    if result:
+                        print(f"  ✅ Generated {result} (in /assets/pwa/)")
+                except Exception as e:
+                    print(f"⚠️  Error in screenshot parallel processing: {e}")
 
 def main():
     """Main function - automatically optimize images"""

@@ -106,16 +106,30 @@ class SiteConfig:
         nav_titles = {"home": "Home", "games": "Games", "about": "About", "contact": "Contact", "privacy": "Privacy"}
         footer_titles = {"privacy": "Privacy Policy", "terms": "Terms of Service", "contact": "Contact", "dmca": "DMCA"}
 
-        # Default CSS design tokens
-        css_bg = getattr(self, "css_bg", "#ffffff")
-        css_fg = getattr(self, "css_fg", "#0b1220")
-        css_muted = getattr(self, "css_muted", "#6b7280")
-        css_brand = getattr(self, "css_brand", "#0369a1")
-        css_brand_2 = getattr(self, "css_brand_2", "#025e8f")
-        css_surface = getattr(self, "css_surface", "#f8fafc")
-        css_radius = getattr(self, "css_radius", "12px")
-        css_font_family = getattr(self, "css_font_family", "Inter, Arial, sans-serif")
-        container_max_width = getattr(self, "container_max_width", "1100px")
+        # Dark Theme CSS design tokens - matching escaperoad.io
+        # Try to get from settings first, then use defaults
+        try:
+            from . import settings as simple_config
+            css_bg = getattr(simple_config, "CSS_BG", "#000000")
+            css_fg = getattr(simple_config, "CSS_FG", "#ffffff")
+            css_muted = getattr(simple_config, "CSS_MUTED", "#999999")
+            css_brand = getattr(simple_config, "CSS_BRAND", "#4a9eff")
+            css_brand_2 = getattr(simple_config, "CSS_BRAND_2", "#357acc")
+            css_surface = getattr(simple_config, "CSS_SURFACE", "#222222")
+            css_radius = getattr(simple_config, "CSS_RADIUS", "8px")
+            css_font_family = getattr(simple_config, "CSS_FONT_FAMILY", "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif")
+            container_max_width = getattr(simple_config, "CONTAINER_MAX_WIDTH", "1400px")
+        except ImportError:
+            # Fallback to defaults if settings not available
+            css_bg = "#000000"
+            css_fg = "#ffffff"
+            css_muted = "#999999"
+            css_brand = "#4a9eff"
+            css_brand_2 = "#357acc"
+            css_surface = "#222222"
+            css_radius = "8px"
+            css_font_family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+            container_max_width = "1400px"
 
         return {
             "site_name": self.site_name,
@@ -167,7 +181,7 @@ class SiteConfig:
         try:
             from . import settings as simple_config
             return f"/assets/images/seo/{simple_config.SEO_FILENAME}.webp"
-        except:
+        except (ImportError, AttributeError):
             return "/assets/images/seo/space-waves-pro.webp"  # Match image optimizer fallback
     
     def _get_about_url(self):
@@ -201,7 +215,7 @@ class SiteConfig:
         try:
             from . import settings as simple_config
             return getattr(simple_config, 'INDEX_DESCRIPTION', f"Play {self.site_name} free online!")
-        except:
+        except (ImportError, AttributeError):
             return f"Play {self.site_name} free online!"
     
     @property 
@@ -209,7 +223,7 @@ class SiteConfig:
         try:
             from . import settings as simple_config
             return simple_config.INDEX_TITLE
-        except:
+        except (ImportError, AttributeError):
             return self.site_name
     
     @property
@@ -282,9 +296,14 @@ class SiteConfig:
             # Ensure language matches current site language
             faq_schema["inLanguage"] = (self.language or "en-US").split('-')[0]
             return faq_schema
+        except FileNotFoundError:
+            print(f"⚠️  Warning: FAQ file not found")
+        except json.JSONDecodeError as e:
+            print(f"⚠️  Warning: Invalid JSON in FAQ file: {e}")
         except Exception as e:
-            print(f"⚠️  Warning: Could not load FAQ schema from faq.json: {e}")
-            # Return minimal fallback FAQ schema
+            print(f"⚠️  Warning: Could not load FAQ schema: {e}")
+            
+        # Return minimal fallback FAQ schema for all exception cases
             return {
                 "@context": "https://schema.org",
                 "@type": "FAQPage",

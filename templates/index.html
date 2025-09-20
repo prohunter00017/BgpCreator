@@ -2,25 +2,25 @@
 
 {% block extra_head %}
 <!-- FAQ Schema for SEO -->
-{% if faq_schema %}
+{% if faq_schema is defined and faq_schema %}
 <script type="application/ld+json">
 {{ faq_schema | tojson | safe }}
 </script>
 {% endif %}
 
 <!-- SoftwareApplication Schema for SEO (global or per-game override) -->
-{% if software_schema %}
+{% if software_schema is defined and software_schema %}
 <script type="application/ld+json">
 {{ software_schema | tojson | safe }}
 </script>
-{% elif software_application_schema %}
+{% elif software_application_schema is defined and software_application_schema %}
 <script type="application/ld+json">
 {{ software_application_schema | tojson | safe }}
 </script>
 {% endif %}
 
 <!-- Breadcrumb Schema for SEO -->
-{% if breadcrumb_schema and breadcrumb_schema.itemListElement %}
+{% if breadcrumb_schema is defined and breadcrumb_schema and breadcrumb_schema.itemListElement %}
 <script type="application/ld+json">
 {{ breadcrumb_schema | tojson | safe }}
 </script>
@@ -28,305 +28,24 @@
 {% endblock %}
 
 {% block extra_css %}
-/* ========================================================================== */
-/* ORGANIZED CSS ARCHITECTURE FOR EASY FEATURE ADDITION                      */
-/* ========================================================================== */
-
-/* ==========================================================================
-   1. BASE & LAYOUT STYLES
-   ========================================================================== */
-
-/* Main Page Structure */
-.game-section {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
-.page-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.game-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--brand);
-  margin: 0;
-  line-height: 1.2;
-}
-
-/* Main Game Container */
-.main-game-container {
-  margin-bottom: 2rem;
-}
-
-.game-frame-wrapper {
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-
-/* Content Layout */
-.content-section {
-  margin: 30px 0;
-  padding: 0;
-}
-
-.content-section h2 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 15px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
-}
-
-.content-section h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  margin: 20px 0 10px;
-}
-
-.content-section p {
-  font-size: 14px;
-  line-height: 1.6;
-  color: #666;
-  margin: 0 0 15px;
-}
-
-.content-section ul {
-  margin: 10px 0 15px 20px;
-}
-
-.content-section li {
-  font-size: 14px;
-  line-height: 1.5;
-  color: #666;
-  margin: 5px 0;
-}
-
-.content-section strong {
-  color: #333;
-}
-
-/* ==========================================================================
-   2. COMPONENT STYLES
-   ========================================================================== */
-
-/* Button Components */
-.btn {
-  display: inline-block;
-  border: 1px solid #ffffff33;
-  color: #fff;
-  background: var(--brand);
-  padding: .5rem .75rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn.secondary {
-  background: transparent;
-}
-
-.btn:hover {
-  transform: translateY(-1px);
-}
-
-#play-btn {
-  padding: 1.25rem 2rem;
-  font-size: 1.25rem;
-  line-height: 1;
-  border-radius: 999px;
-  font-weight: 700;
-  box-shadow: 0 6px 18px rgba(14,165,233,.25);
-  transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease;
-}
-
-#play-btn:hover, 
-#play-btn:focus-visible {
-  transform: translateY(-1px) scale(1.02);
-  box-shadow: 0 10px 24px rgba(2,94,143,.35);
-  background: #0b82c0;
-}
-
-/* Card Components */
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
-  margin: 1.5rem 0;
-}
-
-.card {
-  background: var(--surface);
-  border: 1px solid #e5e7eb;
-  border-radius: var(--radius);
-  padding: 1rem;
-  transition: box-shadow 0.2s ease;
-}
-
-.card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-/* Collapsible Components */
-details {
-  background: var(--surface);
-  border: 1px solid #e5e7eb;
-  border-radius: var(--radius);
-  padding: .75rem 1rem;
-  margin-bottom: .75rem;
-}
-
-details + details {
-  margin-top: .75rem;
-}
-
-summary {
-  cursor: pointer;
-  font-weight: 600;
-}
-
-/* ==========================================================================
-   3. ENHANCED GAME FRAME STYLES
-   ========================================================================== */
-
-/* Play Button Enhancement */
-.play-button-container {
-  display: grid;
-  place-items: center;
-  text-align: center;
-  padding: 1rem;
-}
-
-.primary-play-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1.25rem 2rem;
-  font-size: 1.25rem;
-  line-height: 1;
-  border-radius: 999px;
-  font-weight: 700;
-  background: #0ea5e9;
-  color: #ffffff;
-  box-shadow: 0 6px 18px rgba(14,165,233,.25);
-  transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease;
-  border: none;
-  cursor: pointer;
-}
-
-.primary-play-btn:hover, 
-.primary-play-btn:focus-visible {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 12px 28px rgba(2,94,143,.4);
-  background: #0284c7;
-  color: #ffffff;
-}
-
-.play-icon {
-  font-size: 1.1em;
-  line-height: 1;
-}
-
-.play-text {
-  font-weight: 700;
-}
-
-/* Background Image Styling */
-.game-background-image {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  filter: blur(14px) saturate(1.05);
-  transform: scale(1.1);
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: filter 0.3s ease;
-}
-
-/* Game Frame Height Fix */
+/* Essential above-the-fold styles for immediate rendering */
 .frame-wrap {
   position: relative;
-  border-radius: var(--radius);
-  overflow: hidden;
-  background: var(--surface);
-  border: 1px solid #e5e7eb;
-  height: 100%;
-  min-height: 400px;
-}
-
-iframe {
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
-
-.frame-wrap > iframe {
-  position: relative;
-  z-index: 1;
-  aspect-ratio: unset;
-}
-
-/* ==========================================================================
-   4. INTERACTIVE & MEDIA STYLES
-   ========================================================================== */
-
-/* Game Frame & Iframe */
-.frame-wrap {
-  position: relative;
-  border-radius: var(--radius);
-  overflow: hidden;
-  background: var(--surface);
-  border: 1px solid #e5e7eb;
-}
-
-iframe {
-  width: 100%;
+  min-height: 600px;
   aspect-ratio: 16/9;
-  border: 0;
 }
-
-.frame-wrap > iframe {
-  position: relative;
-  z-index: 1;
-}
-
-/* Overlay System */
 .overlay {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(180deg, rgba(2,6,23,.04), rgba(2,6,23,.08));
-  color: #0b1220;
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
   z-index: 3;
-  pointer-events: auto;
 }
-
-.overlay * {
-  pointer-events: auto;
-}
-
-.overlay span {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  padding: .5rem .75rem;
-  border-radius: 999px;
-  box-shadow: 0 1px 2px rgba(0,0,0,.06);
-}
-
-/* Fullscreen States */
 body.playing {
   overflow: hidden;
 }
-
 .frame-wrap.fullscreen {
   position: fixed;
   inset: 0;
@@ -334,579 +53,6 @@ body.playing {
   border-radius: 0;
   border: 0;
 }
-
-.frame-wrap.fullscreen img {
-  filter: blur(18px) saturate(1.05);
-  transform: scale(1.12);
-}
-
-.frame-wrap.fullscreen > iframe {
-  width: 100%;
-  height: 100%;
-  aspect-ratio: auto;
-}
-
-/* Exit Controls */
-.exit-btn {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 4;
-  border: 0;
-  background: rgba(11,18,32,.75);
-  color: #fff;
-  border-radius: 10px;
-  padding: .5rem .65rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: none;
-  transition: background-color 0.2s ease;
-}
-
-.exit-btn:focus-visible {
-  outline: 2px solid var(--brand);
-}
-
-.exit-btn:hover {
-  background: rgba(11,18,32,.9);
-}
-
-.frame-wrap.fullscreen .exit-btn {
-  display: inline-flex;
-}
-
-/* ==========================================================================
-   5. NOTIFICATION & BANNER STYLES
-   ========================================================================== */
-
-/* Cookie Banner */
-#cookie-banner {
-  display: none;
-  position: fixed;
-  left: 1rem;
-  right: 1rem;
-  bottom: 1rem;
-  z-index: 50;
-  background: #0b1220;
-  color: #fff;
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 10px 30px rgba(0,0,0,.2);
-}
-
-#cookie-banner p {
-  margin: 0 0 .5rem;
-}
-
-/* ==========================================================================
-   6. RESPONSIVE DESIGN SYSTEM
-   ========================================================================== */
-
-/* Large Desktop (1200px+) */
-@media (min-width: 1200px) {
-  .widget-zones {
-    display: grid;
-    grid-template-columns: 1fr 300px;
-    grid-template-rows: auto auto;
-    gap: 2rem;
-    grid-template-areas: 
-      "top-widgets side-widgets"
-      "bottom-widgets side-widgets";
-  }
-  
-  .top-widgets {
-    grid-area: top-widgets;
-  }
-  
-  .side-widgets {
-    grid-area: side-widgets;
-  }
-  
-  .bottom-widgets {
-    grid-area: bottom-widgets;
-  }
-  
-  .game-section {
-    padding: 0 2rem;
-  }
-}
-
-/* Tablet (768px - 1199px) */
-@media (max-width: 1199px) and (min-width: 768px) {
-  .game-title {
-    font-size: 2.2rem;
-  }
-  
-  .primary-play-btn {
-    padding: 1.1rem 1.8rem;
-    font-size: 1.15rem;
-  }
-  
-  .widget-zones {
-    gap: 1.25rem;
-  }
-}
-
-/* Mobile (< 768px) */
-@media (max-width: 767px) {
-  .game-section {
-    padding: 0 0.75rem;
-  }
-  
-  .game-title {
-    font-size: 1.8rem;
-  }
-  
-  .primary-play-btn {
-    padding: 1rem 1.5rem;
-    font-size: 1.1rem;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .cards {
-    grid-template-columns: 1fr;
-  }
-  
-  .widget-zones {
-    gap: 1rem;
-  }
-  
-  .page-header {
-    margin-bottom: 1.5rem;
-  }
-}
-
-/* ==========================================================================
-   7. UTILITY CLASSES (Ready for new features)
-   ========================================================================== */
-
-/* Spacing Utilities */
-.spacing-xs { gap: 0.25rem; }
-.spacing-sm { gap: 0.5rem; }
-.spacing-md { gap: 1rem; }
-.spacing-lg { gap: 1.5rem; }
-.spacing-xl { gap: 2rem; }
-
-/* Display Utilities */
-.show-mobile { display: none; }
-.show-tablet { display: none; }
-.show-desktop { display: none; }
-
-@media (max-width: 767px) {
-  .show-mobile { display: block; }
-  .hide-mobile { display: none; }
-}
-
-@media (min-width: 768px) and (max-width: 1023px) {
-  .show-tablet { display: block; }
-  .hide-tablet { display: none; }
-}
-
-@media (min-width: 1024px) {
-  .show-desktop { display: block; }
-  .hide-desktop { display: none; }
-}
-
-/* Animation Utilities */
-.fade-in {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-.slide-up {
-  animation: slideUp 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-/* ==========================================================================
-   8. WIDGET FRAMEWORK SYSTEM
-   ========================================================================== */
-
-/* Widget Base Classes (for instant widget creation) */
-.widget {
-  background: var(--surface);
-  border: 1px solid #e5e7eb;
-  border-radius: var(--radius);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  transition: all 0.3s ease;
-}
-
-.widget:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transform: translateY(-1px);
-}
-
-.widget-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid #f1f5f9;
-}
-
-.widget-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--brand);
-  margin: 0;
-}
-
-.widget-content {
-  flex: 1;
-  line-height: 1.6;
-}
-
-/* Widget Layout Systems */
-.widget-grid {
-  display: grid;
-  gap: 1rem;
-}
-
-.widget-grid-2 { grid-template-columns: repeat(2, 1fr); }
-.widget-grid-3 { grid-template-columns: repeat(3, 1fr); }
-.widget-grid-4 { grid-template-columns: repeat(4, 1fr); }
-.widget-grid-auto { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-
-/* Responsive Widget Grids */
-@media (max-width: 768px) {
-  .widget-grid-2,
-  .widget-grid-3,
-  .widget-grid-4 {
-    grid-template-columns: 1fr;
-  }
-  
-  .widget {
-    padding: 1rem;
-    margin-bottom: 1rem;
-  }
-  
-  .widget-header {
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-  }
-  
-  .widget-title {
-    font-size: 1.1rem;
-  }
-}
-
-/* Interactive Element Base Classes */
-.interactive-element {
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid transparent;
-}
-
-.interactive-element:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-  border-color: var(--brand);
-}
-
-.interactive-element:active {
-  transform: translateY(0);
-}
-
-/* Widget Spacing and Alignment */
-.widget-center {
-  text-align: center;
-}
-
-.widget-flex {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.widget-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-/* Widget Color Variants */
-.widget.primary {
-  border-color: var(--brand);
-  background: linear-gradient(135deg, rgba(14,165,233,0.02), rgba(14,165,233,0.05));
-}
-
-.widget.secondary {
-  border-color: #e5e7eb;
-  background: #f8fafc;
-}
-
-.widget.accent {
-  border-color: #fbbf24;
-  background: linear-gradient(135deg, rgba(251,191,36,0.02), rgba(251,191,36,0.05));
-}
-
-
-
-/* Content Split Container */
-.content-split-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-}
-
-/* Desktop: Split layout */
-@media (min-width: 1200px) {
-  .content-split-container {
-    display: flex;
-    gap: 2rem;
-    align-items: flex-start;
-  }
-  
-  .article-content-section {
-    flex: 1;
-    width: 50%;
-    padding-right: 1rem;
-  }
-  
-  .games-widget-section {
-    flex: 1;
-    width: 50%;
-    padding-left: 1rem;
-  }
-  
-  /* Adjust games grid for narrower container */
-  .games-widget-section .games-icon-grid {
-    grid-template-columns: repeat(5, 1fr);
-  }
-  
-  /* Remove article section padding on desktop */
-  .article-content-section .container {
-    padding: 0;
-  }
-}
-
-/* Tablet and Mobile: Stack vertically with games first */
-@media (max-width: 1199px) {
-  .content-split-container {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .article-content-section,
-  .games-widget-section {
-    width: 100%;
-    padding: 0;
-  }
-  
-  /* Reorder: Games widget first on mobile/tablet */
-  .games-widget-section {
-    order: 1;
-    margin-bottom: 2rem;
-  }
-  
-  .article-content-section {
-    order: 2;
-  }
-}
-
-/* All Games Icon Widget Styles */
-.all-games-widget {
-  margin: 0;
-  padding: 0;
-}
-
-.games-icon-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  gap: 0;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* Desktop: Adjusted for split layout */
-@media (min-width: 1200px) {
-  .games-icon-grid {
-    grid-template-columns: repeat(5, 1fr);
-  }
-}
-
-/* Tablet: 6 icons per row */
-@media (min-width: 768px) and (max-width: 1199px) {
-  .games-icon-grid {
-    grid-template-columns: repeat(6, 1fr);
-  }
-}
-
-/* Mobile: 4 icons per row */
-@media (max-width: 767px) {
-  .games-icon-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-.game-icon-card {
-  position: relative;
-  width: 100%;
-  padding-bottom: 100%;
-  overflow: hidden;
-  background: var(--gray-100);
-  border: 1px solid var(--gray-200);
-  transition: all var(--transition-fast);
-  cursor: pointer;
-  display: block;
-}
-
-.game-icon-card:hover {
-  transform: scale(1.05);
-  z-index: 10;
-  box-shadow: var(--shadow-md);
-  border-color: var(--primary-color);
-}
-
-.game-icon-card img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.games-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* Desktop: Max 5 games per row */
-@media (min-width: 1200px) {
-  .games-grid {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 0;
-  }
-}
-
-/* Tablet: 3 games per row */
-@media (min-width: 768px) and (max-width: 1199px) {
-  .games-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0;
-  }
-  
-  .game-card {
-    max-width: 140px;
-  }
-}
-
-/* Mobile: 2 games per row */
-@media (max-width: 767px) {
-  .games-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0;
-  }
-  
-  .games-widget {
-    margin: 1rem 0;
-    padding: 0.75rem 0;
-  }
-  
-  .widget-title {
-    font-size: 1rem;
-    margin-bottom: 0.75rem;
-  }
-  
-  .game-card {
-    max-width: 120px;
-  }
-}
-
-.game-card {
-  background: var(--white);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--border-radius);
-  overflow: hidden;
-  transition: all var(--transition-fast);
-  cursor: pointer;
-  max-width: 160px;
-  margin: 0 auto;
-}
-
-.game-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--primary-color);
-}
-
-.game-image {
-  position: relative;
-  width: 100%;
-  height: 0;
-  padding-bottom: 100%; /* Square aspect ratio */
-  overflow: hidden;
-  background: var(--gray-100);
-}
-
-.game-image img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform var(--transition-normal);
-  cursor: pointer;
-}
-
-.game-card:hover .game-image img {
-  transform: scale(1.05);
-}
-
-.game-info {
-  display: none;
-}
-
-.game-info .game-title {
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin: 0 0 0.75rem 0;
-  color: var(--gray-700);
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.play-game-btn {
-  background: var(--primary-color);
-  color: white;
-  border: none;
-  padding: 0.4rem 0.8rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  width: 100%;
-  max-width: 65px;
-}
-
-.play-game-btn:hover {
-  background: var(--primary-hover);
-  transform: translateY(-1px);
-}
-
 {% endblock %}
 
 {% block content %}
@@ -949,7 +95,7 @@ body.playing {
 {% block extra_js %}
 {% if game_embed %}
 <script>
-// Game loading functionality and sidebar widget - Optimized for performance
+// Game loading functionality - Optimized for performance
 document.addEventListener('DOMContentLoaded', () => {
   const playBtn = document.getElementById('play-btn');
   const gameFrame = document.getElementById('game-frame');
@@ -958,24 +104,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const exitBtn = document.getElementById('exit-full');
 
   // All available games for the widget
-  const allGames = {{ games | tojson | safe }};
-  const currentGameSlug = '{{ page_key }}';
+  const allGames = {{ games | tojson | safe if games is defined else '[]' }};
+  const currentGameSlug = '{{ page_key if page_key is defined else "" }}';
   
-  // Configuration
-  const ROTATION_INTERVAL = 10000; // 10 seconds
-  const DESKTOP_GAMES_PER_SIDEBAR = 6;
-  const TABLET_GAMES_PER_SIDEBAR = 8;
-  const MOBILE_GAMES_PER_SIDEBAR = 6;
-  
-  let rotationIntervals = [];
 
-  // Function to load a game
+  // Function to load a game (used by games widget)
   window.loadGame = function(gameUrl) {
-    if (gameFrame && overlay) {
+    if (gameFrame && overlay && frameWrap) {
+      // Add fullscreen class first
+      frameWrap.classList.add('fullscreen');
+      // Load the game URL
       gameFrame.src = gameUrl;
+      // Hide overlay and add playing class
       overlay.style.display = 'none';
       document.body.classList.add('playing');
-      frameWrap.classList.add('fullscreen');
       
       // Scroll to top to show the game
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -984,149 +126,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Game loading functionality
   if (playBtn && gameFrame) {
-    playBtn.addEventListener('click', () => {
-      gameFrame.src = '{{ game_embed.url }}';
-      requestAnimationFrame(() => {
-        overlay.style.display = 'none';
-        document.body.classList.add('playing');
-        frameWrap.classList.add('fullscreen');
-      });
+    playBtn.addEventListener('click', (e) => {
+      // Prevent default action (no navigation)
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Add fullscreen class first
+      frameWrap.classList.add('fullscreen');
+      // Load the game URL from data attribute
+      const gameUrl = playBtn.dataset.gameUrl;
+      gameFrame.src = gameUrl;
+      // Hide overlay and add playing class
+      overlay.style.display = 'none';
+      document.body.classList.add('playing');
+      
+      // Ensure exit button is visible
+      if (exitBtn) {
+        exitBtn.style.display = 'inline-flex';
+      }
     });
   }
 
+  // Exit fullscreen functionality
   if (exitBtn) {
     exitBtn.addEventListener('click', () => {
+      // Remove fullscreen and playing classes
       document.body.classList.remove('playing');
       frameWrap.classList.remove('fullscreen');
+      // Clear the iframe src to stop the game
+      if (gameFrame) {
+        gameFrame.src = '';
+      }
+      // Show the overlay again
+      if (overlay) {
+        overlay.style.display = '';
+      }
     });
   }
 
   // ESC key to exit fullscreen
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && document.body.classList.contains('playing')) {
+      // Remove fullscreen and playing classes
       document.body.classList.remove('playing');
       frameWrap.classList.remove('fullscreen');
+      // Clear the iframe src to stop the game
+      if (gameFrame) {
+        gameFrame.src = '';
+      }
+      // Show the overlay again
+      if (overlay) {
+        overlay.style.display = '';
+      }
     }
   });
 
-  // Sidebar widget functionality
-  function getRandomGames(exclude = [], count = 6) {
-    if (!Array.isArray(allGames) || allGames.length === 0) {
-      return [];
-    }
-    const available = allGames.filter(game => 
-      game && game.url && game.title && game.image && !exclude.includes(game.url)
-    );
-    const shuffled = [...available].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, count);
-  }
 
-  function createGameIcon(game) {
-    if (!game || !game.image || !game.title || !game.url) {
-      return null;
-    }
-    
-    const icon = document.createElement('div');
-    icon.className = 'game-icon';
-    icon.innerHTML = `<img src="${game.image}" alt="${game.title}" loading="lazy" onerror="this.style.display='none'">`;
-    
-    icon.addEventListener('click', () => {
-      // Navigate to the game page
-      if (game.url) {
-        window.location.href = game.url;
-      }
-    });
-    
-    return icon;
-  }
-
-  function populateSidebar(container, games) {
-    if (!container || !Array.isArray(games)) return;
-    
-    container.innerHTML = '';
-    games.forEach(game => {
-      const icon = createGameIcon(game);
-      if (icon) {
-        container.appendChild(icon);
-      }
-    });
-  }
-
-  function getGamesPerSidebar() {
-    const width = window.innerWidth;
-    if (width >= 1024) return DESKTOP_GAMES_PER_SIDEBAR;
-    if (width >= 768) return TABLET_GAMES_PER_SIDEBAR;
-    return MOBILE_GAMES_PER_SIDEBAR;
-  }
-
-  function initializeSidebars() {
-    const leftSidebar = document.querySelector('[data-sidebar="left"]');
-    const rightSidebar = document.querySelector('[data-sidebar="right"]');
-    const tabletSidebar = document.querySelector('[data-sidebar="tablet"]');
-    const mobileSidebar1 = document.querySelector('[data-sidebar="mobile-1"]');
-    const mobileSidebar2 = document.querySelector('[data-sidebar="mobile-2"]');
-    
-    const gamesPerSidebar = getGamesPerSidebar();
-    
-    if (leftSidebar) {
-      const leftGames = getRandomGames([`{{ page_key }}.html`], gamesPerSidebar);
-      populateSidebar(leftSidebar, leftGames);
-    }
-    
-    if (rightSidebar) {
-      const rightGames = getRandomGames([`{{ page_key }}.html`], gamesPerSidebar);
-      populateSidebar(rightSidebar, rightGames);
-    }
-    
-    if (tabletSidebar) {
-      const tabletGames = getRandomGames([`{{ page_key }}.html`], gamesPerSidebar);
-      populateSidebar(tabletSidebar, tabletGames);
-    }
-    
-    if (mobileSidebar1) {
-      const mobile1Games = getRandomGames([`{{ page_key }}.html`], gamesPerSidebar);
-      populateSidebar(mobileSidebar1, mobile1Games);
-    }
-    
-    if (mobileSidebar2) {
-      const mobile2Games = getRandomGames([`{{ page_key }}.html`], gamesPerSidebar);
-      populateSidebar(mobileSidebar2, mobile2Games);
-    }
-  }
-
-  function startRotation() {
-    // Clear existing intervals
-    rotationIntervals.forEach(interval => clearInterval(interval));
-    rotationIntervals = [];
-
-    const sidebars = document.querySelectorAll('[data-sidebar]');
-    
-    sidebars.forEach(sidebar => {
-      const interval = setInterval(() => {
-        const gamesPerSidebar = getGamesPerSidebar();
-        const newGames = getRandomGames([`{{ page_key }}.html`], gamesPerSidebar);
-        populateSidebar(sidebar, newGames);
-      }, ROTATION_INTERVAL);
-      
-      rotationIntervals.push(interval);
-    });
-  }
-
-  // Initialize sidebars and start rotation
-  if (allGames && allGames.length > 0) {
-    initializeSidebars();
-    startRotation();
-    
-    // Re-initialize on window resize
-    let resizeTimer;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        initializeSidebars();
-        startRotation();
-      }, 250);
-    });
-  }
 });
 </script>
 {% endif %}

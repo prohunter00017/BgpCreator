@@ -26,6 +26,20 @@ CONTACT_PHONE = "+1-555-123-4567"
 GOOGLE_ANALYTICS_ID = "G-FGRWDEFQY4"
 
 # =============================================================================
+# CSS THEME SETTINGS - Dark Theme matching escaperoad.io
+# =============================================================================
+
+CSS_BG = "#000000"
+CSS_FG = "#ffffff"
+CSS_MUTED = "#999999"
+CSS_BRAND = "#4a9eff"
+CSS_BRAND_2 = "#357acc"
+CSS_SURFACE = "#222222"
+CSS_RADIUS = "8px"
+CSS_FONT_FAMILY = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+CONTAINER_MAX_WIDTH = "1400px"
+
+# =============================================================================
 # LANGUAGE SETTINGS - CHANGE THIS LINE TO SWITCH LANGUAGES!
 # =============================================================================
 
