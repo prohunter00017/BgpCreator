@@ -566,7 +566,7 @@
         searchableElements.forEach(element => {
             const searchText = (
                 element.textContent ||
-                element.querySelector('.card-title, .game-title, h1, h2, h3')?.textContent ||
+                element.querySelector('.card-title, h1, h2, h3')?.textContent ||
                 ''
             ).toLowerCase();
             

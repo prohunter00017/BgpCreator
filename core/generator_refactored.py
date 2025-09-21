@@ -399,6 +399,13 @@ class SiteGenerator:
             output_path, subdir = self.page_builder.get_page_output_path(page_key)
             filename = os.path.basename(output_path)
             
+            # Fix canonical URL to match actual output structure
+            if subdir:
+                # Update canonical URL to include subdirectory
+                canonical_base = context.get('canonical_url', '').rsplit('/', 1)[0]
+                if not canonical_base.endswith(f'/{subdir}'):
+                    context['canonical_url'] = f"{canonical_base.rstrip('/')}/{subdir}/{filename}"
+            
             # Generate the page
             self.page_builder.generate_page(template_name, context, filename, subdir)
             

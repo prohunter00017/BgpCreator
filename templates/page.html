@@ -8,17 +8,21 @@
 {% endblock %}
 
 {% block extra_css %}
+<style>
 {% if page_type == 'contact' %}
 form{display:grid;gap:.5rem}
-input,textarea{padding:.5rem;border:1px solid #e5e7eb;border-radius:8px}
-button{cursor:pointer;padding:.5rem .75rem;border-radius:8px;border:1px solid #e5e7eb;background:var(--brand);color:#fff}
+input,textarea{padding:.5rem;border:1px solid #333;border-radius:6px;background:#1a1a1a;color:#fff}
+button{cursor:pointer;padding:.5rem .75rem;border-radius:6px;border:1px solid #333;background:var(--brand);color:#fff}
+button:hover{background:var(--brand-2)}
 {% endif %}
 
 {% if page_type == 'dmca' %}
 form{display:grid;gap:.5rem}
-input,textarea{padding:.5rem;border:1px solid #e5e7eb;border-radius:8px}
-button{cursor:pointer;padding:.5rem .75rem;border-radius:8px;border:1px solid #e5e7eb;background:var(--brand);color:#fff}
+input,textarea{padding:.5rem;border:1px solid #333;border-radius:6px;background:#1a1a1a;color:#fff}
+button{cursor:pointer;padding:.5rem .75rem;border-radius:6px;border:1px solid #333;background:var(--brand);color:#fff}
+button:hover{background:var(--brand-2)}
 {% endif %}
+</style>
 {% endblock %}
 
 {% block content %}
