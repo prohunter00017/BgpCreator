@@ -17,6 +17,7 @@ from .seo_manager import SEOManager
 from .asset_manager import AssetManager
 from .optimizer import ImageOptimizer
 from .build_cache import BuildCache
+from .site_crawler import SiteCrawler
 from .performance_logger import (
     logger, time_operation, log_info, log_success, log_warn, log_error,
     log_phase_start, log_phase_complete, update_stats, print_build_summary
@@ -51,9 +52,8 @@ class SiteGenerator:
         if not site_url and hasattr(self.site_settings, 'SITE_URL'):
             site_url = self.site_settings.SITE_URL
         
-        # Create configuration
-        self.config = SiteConfig(language_code=self.language)
-        self.config.static_dir = self.static_dir
+        # Create configuration with site-specific settings
+        self.config = SiteConfig(language_code=self.language, site=self.site)
         
         # Add ad configuration from site settings
         if hasattr(self.site_settings, 'ADS_ENABLED'):
@@ -103,15 +103,22 @@ class SiteGenerator:
         # Always include shared templates as fallback
         template_loaders.append(FileSystemLoader(self.template_dir))
         
-        return Environment(
+        env = Environment(
             loader=ChoiceLoader(template_loaders) if len(template_loaders) > 1 else template_loaders[0],
             autoescape=select_autoescape(['html', 'xml'])
         )
+        
+        # Add translate filter - just returns the default value for now
+        def translate_filter(key, default=None):
+            return default if default else key
+        env.filters['translate'] = translate_filter
+        
+        return env
     
     def _initialize_managers(self):
         """Initialize all manager components"""
         self.game_manager = GameManager(self.content_dir, self.config.site_url)
-        self.page_builder = PageBuilder(self.env, self.output_dir)
+        self.page_builder = PageBuilder(self.env, self.output_dir, self.config.site_url)
         self.seo_manager = SEOManager(self.config.site_url, self.config.site_name, self.output_dir)
         self.asset_manager = AssetManager(self.static_dir, self.output_dir, build_cache=self.build_cache)
         self.image_optimizer = ImageOptimizer(self.static_dir, self.output_dir, build_cache=self.build_cache)
@@ -177,14 +184,27 @@ class SiteGenerator:
                 os.makedirs(self.output_dir, exist_ok=True)
                 log_info("SiteGenerator", "Output directory ready", "📁")
             
-            # Always copy CSS from templates folder (must happen every build)
+            # Process CSS with color palette from site settings
             templates_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
             templates_css = os.path.join(templates_dir, 'styles.css')
             if os.path.exists(templates_css):
                 output_templates = os.path.join(self.output_dir, 'templates')
                 os.makedirs(output_templates, exist_ok=True)
-                shutil.copy2(templates_css, os.path.join(output_templates, 'styles.css'))
-                log_info("SiteGenerator", "Copied styles.css from templates folder", "✅")
+                output_css = os.path.join(output_templates, 'styles.css')
+                
+                # Get color palette from site settings (default to palette 1)
+                color_palette = getattr(self.site_settings, 'COLOR_PALETTE', 1)
+                
+                # Import and use CSS processor
+                from .css_processor import generate_css_for_site
+                if generate_css_for_site(templates_css, output_css, color_palette):
+                    from .color_palettes import get_palette_info
+                    palette_info = get_palette_info(color_palette)
+                    log_info("SiteGenerator", f"Generated styles.css with {palette_info['name']} palette", "🎨")
+                else:
+                    # Fallback to simple copy if processing fails
+                    shutil.copy2(templates_css, output_css)
+                    log_info("SiteGenerator", "Copied styles.css (fallback)", "⚠️")
             
             # Generate service worker from template
             sw_template = os.path.join(templates_dir, 'sw.js')
@@ -290,6 +310,12 @@ class SiteGenerator:
                 )
                 self._games = games
             
+            # Generate error and offline pages (404.html, offline.html)
+            log_phase_start("SiteGenerator", "Error and offline pages generation", "🚨")
+            base_context = self.config.get_base_context()
+            self.page_builder.generate_error_pages(base_context)
+            log_phase_complete("SiteGenerator", "Error and offline pages generation", 0.0, "✅")
+            
             # Generate SEO files (manifest, robots.txt, sitemap.xml)
             log_phase_start("SiteGenerator", "SEO file generation", "🔍")
             self.create_manifest()
@@ -311,6 +337,9 @@ class SiteGenerator:
                         memory_usage_mb=memory_usage)
             
             if static_changed or pages_need_rebuild or self.force:
+                # Final cleanup of all legacy files to prevent duplicate content
+                self._final_cleanup_legacy_files()
+                
                 log_success("SiteGenerator", f"Website generated successfully in '{self.output_dir}' directory!", "✅")
             else:
                 log_success("SiteGenerator", "Website up to date (incremental build)!", "⚡")
@@ -388,26 +417,25 @@ class SiteGenerator:
             # Add missing hero SEO attributes and game embed for index page
             if page_key == "index":
                 context['hero_seo_attributes'] = self.config.get_image_seo_attributes(
-                    self.config.get_dynamic_hero_image()
+                    self.config.get_dynamic_hero_image(),
+                    context_type='hero'
                 )
                 # Add game_embed for index page
-                context['game_embed'] = {"url": self.config.seo_config.get("game_embed", {}).get("url", "https://gulper.io/")}
+                context['game_embed'] = {"url": self.config.seo_config.get("game_embed", {}).get("url", self.config.game_embed_url)}
                 # Add game_url for template to use in data-game-url attribute
                 context['game_url'] = self.config.game_embed_url
             
-            # Get output path
-            output_path, subdir = self.page_builder.get_page_output_path(page_key)
-            filename = os.path.basename(output_path)
+            # Get full output path for clean URLs
+            full_output_path, _ = self.page_builder.get_page_output_path(page_key)
             
-            # Fix canonical URL to match actual output structure
-            if subdir:
-                # Update canonical URL to include subdirectory
-                canonical_base = context.get('canonical_url', '').rsplit('/', 1)[0]
-                if not canonical_base.endswith(f'/{subdir}'):
-                    context['canonical_url'] = f"{canonical_base.rstrip('/')}/{subdir}/{filename}"
+            # Ensure output directory exists for clean URLs
+            os.makedirs(os.path.dirname(full_output_path), exist_ok=True)
             
-            # Generate the page
-            self.page_builder.generate_page(template_name, context, filename, subdir)
+            # Generate the page directly to the clean URL path
+            self.page_builder.generate_page_direct(template_name, context, full_output_path)
+            
+            # Clean up legacy .html files to prevent duplicate content
+            self._cleanup_legacy_files(page_key)
             
         except (OSError, IOError) as e:
             log_warn("SiteGenerator", f"File system error generating page {page_key}: {e}", "⚠️")
@@ -416,6 +444,92 @@ class SiteGenerator:
             log_warn("SiteGenerator", f"Template error generating page {page_key}: {e}", "⚠️")
             update_stats("page_generation", files_error=1)
     
+    def _cleanup_legacy_files(self, page_key):
+        """Clean up legacy .html files to prevent duplicate content"""
+        try:
+            # Map of legacy paths to clean for each page type
+            legacy_paths = {
+                "about-us": ["pages/about-us.html"],
+                "contact": ["pages/contact.html"],
+                "privacy-policy": ["legal/privacy-policy.html"],
+                "terms-of-service": ["legal/terms-of-service.html"],
+                "cookies-policy": ["legal/cookies-policy.html"],
+                "dmca": ["legal/dmca.html"],
+                "parents-information": ["legal/parents-information.html"],
+                "games": ["games.html"]  # Clean up old games listing file
+            }
+            
+            paths_to_remove = legacy_paths.get(page_key, [])
+            
+            for legacy_path in paths_to_remove:
+                full_legacy_path = os.path.join(self.output_dir, legacy_path)
+                if os.path.exists(full_legacy_path):
+                    os.remove(full_legacy_path)
+                    log_info("SiteGenerator", f"Cleaned up legacy file: {legacy_path}", "🧹")
+                    
+        except Exception as e:
+            log_warn("SiteGenerator", f"Error cleaning up legacy files for {page_key}: {e}", "⚠️")
+
+    def _cleanup_legacy_game_files(self):
+        """Clean up legacy game .html files from games directory"""
+        try:
+            games_dir = os.path.join(self.output_dir, "games")
+            if os.path.exists(games_dir):
+                # Remove all .html files in games directory (keeping only directories with index.html)
+                for file in os.listdir(games_dir):
+                    if file.endswith('.html') and file != 'index.html':
+                        legacy_file = os.path.join(games_dir, file)
+                        os.remove(legacy_file)
+                        log_info("SiteGenerator", f"Cleaned up legacy game file: games/{file}", "🧹")
+        except Exception as e:
+            log_warn("SiteGenerator", f"Error cleaning up legacy game files: {e}", "⚠️")
+
+    def _final_cleanup_legacy_files(self):
+        """Final comprehensive cleanup of all legacy files after build completion"""
+        try:
+            cleanup_files = []
+            cleanup_dirs = []
+            
+            # Root-level legacy files that should be removed
+            root_legacy_files = ["games.html"]
+            for legacy_file in root_legacy_files:
+                full_path = os.path.join(self.output_dir, legacy_file)
+                if os.path.exists(full_path):
+                    os.remove(full_path)
+                    cleanup_files.append(legacy_file)
+            
+            # Legacy directories that might be empty and should be removed
+            legacy_directories = ["pages", "legal"]
+            for legacy_dir in legacy_directories:
+                dir_path = os.path.join(self.output_dir, legacy_dir)
+                if os.path.exists(dir_path):
+                    try:
+                        # Remove directory if it's empty
+                        os.rmdir(dir_path)
+                        cleanup_dirs.append(legacy_dir)
+                    except OSError:
+                        # Directory not empty, check for specific legacy files
+                        for root, dirs, files in os.walk(dir_path, topdown=False):
+                            for file in files:
+                                if file.endswith('.html'):
+                                    legacy_file_path = os.path.join(root, file)
+                                    os.remove(legacy_file_path)
+                                    rel_path = os.path.relpath(legacy_file_path, self.output_dir)
+                                    cleanup_files.append(rel_path)
+                            # Try to remove empty directories
+                            try:
+                                os.rmdir(root)
+                            except OSError:
+                                pass  # Directory not empty, keep it
+            
+            if cleanup_files or cleanup_dirs:
+                files_msg = f", files: {', '.join(cleanup_files)}" if cleanup_files else ""
+                dirs_msg = f", dirs: {', '.join(cleanup_dirs)}" if cleanup_dirs else ""
+                log_info("SiteGenerator", f"Final cleanup completed{files_msg}{dirs_msg}", "🧹")
+            
+        except Exception as e:
+            log_warn("SiteGenerator", f"Error in final cleanup: {e}", "⚠️")
+
     def _get_content_file(self, page_key):
         """Get content file path for a page"""
         # Map page keys to content files
@@ -438,7 +552,7 @@ class SiteGenerator:
                 # Create breadcrumbs
                 breadcrumbs = [
                     {"title": "Home", "url": "/"},
-                    {"title": "Games", "url": "/games.html"},
+                    {"title": "Games", "url": "/games/"},
                     {"title": game["title"], "url": None}
                 ]
                 
@@ -460,7 +574,11 @@ class SiteGenerator:
                 base_context = self.config.get_base_context()
                 base_context['software_application_schema'] = software_schema
                 base_context['breadcrumb_schema'] = self.seo_manager.get_breadcrumb_schema(breadcrumbs)
-                base_context['hero_seo_attributes'] = self.config.get_image_seo_attributes(game["hero_image"])
+                base_context['hero_seo_attributes'] = self.config.get_image_seo_attributes(
+                    game["hero_image"],
+                    context_type='hero',
+                    game_title=game["title"]
+                )
                 
                 # Get games for sidebar
                 sidebar_games = self.game_manager.get_random_games_for_widget(games, game["slug"])
@@ -481,6 +599,9 @@ class SiteGenerator:
             except Exception as e:
                 log_warn("SiteGenerator", f"Error generating game page {game.get('slug')}: {e}", "⚠️")
                 update_stats("page_generation", files_error=1)
+        
+        # Clean up legacy game .html files after all games are generated
+        self._cleanup_legacy_game_files()
     
     def create_manifest(self):
         """Create web manifest"""
@@ -498,10 +619,21 @@ class SiteGenerator:
         self.seo_manager.create_robots_txt()
     
     def create_sitemap_xml(self):
-        """Create sitemap.xml"""
-        # Get site pages from config
-        pages = []
-        if hasattr(self.site_settings, 'SITE_PAGES'):
-            pages = self.site_settings.SITE_PAGES
+        """Create sitemap.xml using crawler to discover all pages"""
+        log_info("SiteGenerator", "Creating comprehensive sitemap using crawler...", "🗺️")
         
-        self.seo_manager.create_sitemap_xml(pages, self._games if hasattr(self, '_games') else None)
+        # Use the crawler to discover all pages
+        crawler = SiteCrawler(self.output_dir, self.config.site_url)
+        crawl_results = crawler.crawl_site()
+        
+        # Generate sitemap entries from discovered pages
+        sitemap_entries = crawler.generate_sitemap_entries()
+        
+        # Create the sitemap XML
+        self.seo_manager.create_sitemap_xml(sitemap_entries, games=None)
+        
+        # Validate the build
+        if not crawler.validate_build(fail_on_errors=False):
+            log_warn("SiteGenerator", "Build validation found issues - check logs above", "⚠️")
+        
+        log_success("SiteGenerator", f"Generated sitemap with {len(sitemap_entries)} URLs from crawled site", "✅")

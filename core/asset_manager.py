@@ -82,6 +82,7 @@ class AssetManager:
             "app.webmanifest",       # PWA manifest (alternative name)
             "sw.js",                 # Service worker for PWA functionality
             "logo.png",              # Site logo
+            "_redirects",            # Cloudflare Pages redirects file
             "robots.txt",            # SEO robots file (may override system-generated)
             "sitemap.xml"            # SEO sitemap (may override system-generated)
         ]
@@ -311,9 +312,28 @@ class AssetManager:
             dest_dir: Destination directory
         """
         try:
+            # CRITICAL FIX: Preserve gamelogo.webp if it exists
+            gamelogo_backup = None
+            gamelogo_path = os.path.join(dest_dir, "gamelogo.webp") if "images" in dest_dir else None
+            
+            if gamelogo_path and os.path.exists(gamelogo_path):
+                # Back up gamelogo.webp before deletion
+                import tempfile
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".webp") as tmp:
+                    gamelogo_backup = tmp.name
+                    shutil.copy2(gamelogo_path, gamelogo_backup)
+            
+            # Original deletion and copy
             if os.path.exists(dest_dir):
                 shutil.rmtree(dest_dir)
             shutil.copytree(src_dir, dest_dir)
+            
+            # Restore gamelogo.webp if it was backed up
+            if gamelogo_backup and os.path.exists(gamelogo_backup):
+                os.makedirs(dest_dir, exist_ok=True)
+                shutil.copy2(gamelogo_backup, gamelogo_path)
+                os.unlink(gamelogo_backup)
+                
         except (OSError, IOError, shutil.Error) as e:
             log_warn("AssetManager", f"Could not copy directory {src_dir}: {e}", "⚠️")
         except Exception as e:

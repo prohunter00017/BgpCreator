@@ -1,5 +1,19 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+{% if current_page == '404' %}
+<!-- Auto-redirect for 404 pages to preserve SEO -->
+<meta http-equiv="refresh" content="3; url=/">
+<link rel="canonical" href="{{ site_url }}">
+<script>
+// Immediate redirect after 2 seconds
+setTimeout(function() {
+    window.location.replace('/');
+}, 2000);
+</script>
+{% endif %}
+{% endblock %}
+
 {% block content %}
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -24,7 +38,13 @@
             
             <h2 class="h4 mb-4">{{ page_title }}</h2>
             
-            {% if content %}
+            {% if current_page == '404' %}
+            <div class="error-content mb-4">
+                <p><strong>Redirecting to homepage in 3 seconds...</strong></p>
+                <p>The page you're looking for no longer exists. You'll be automatically redirected.</p>
+                <p>If not redirected, <a href="/">click here to go home</a>.</p>
+            </div>
+            {% elif content %}
             <div class="error-content mb-4">
                 {{ content | safe }}
             </div>
@@ -43,7 +63,7 @@
                 </button>
                 
                 {% if current_page == '404' %}
-                <a href="/games.html" class="btn btn-outline-primary">
+                <a href="/games/" class="btn btn-outline-primary">
                     <i class="bi bi-controller me-2"></i>
                     {{ 'navigation.games' | translate('Browse Games') }}
                 </a>
@@ -72,10 +92,10 @@
             <div class="help-links mt-5">
                 <h6 class="text-muted mb-3">{{ 'error.help_links' | translate('Helpful Links') }}</h6>
                 <div class="d-flex gap-4 justify-content-center flex-wrap">
-                    <a href="/about.html" class="text-decoration-none">
+                    <a href="/about-us/" class="text-decoration-none">
                         {{ 'navigation.about' | translate('About Us') }}
                     </a>
-                    <a href="/contact.html" class="text-decoration-none">
+                    <a href="/contact/" class="text-decoration-none">
                         {{ 'navigation.contact' | translate('Contact') }}
                     </a>
                     <a href="/sitemap.xml" class="text-decoration-none">
@@ -122,9 +142,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Simple fuzzy matching with common pages
         const commonPages = [
             { path: '/', title: '{{ "navigation.home" | translate("Home") }}' },
-            { path: '/games.html', title: '{{ "navigation.games" | translate("Games") }}' },
-            { path: '/about.html', title: '{{ "navigation.about" | translate("About") }}' },
-            { path: '/contact.html', title: '{{ "navigation.contact" | translate("Contact") }}' }
+            { path: '/games/', title: '{{ "navigation.games" | translate("Games") }}' },
+            { path: '/about-us/', title: '{{ "navigation.about" | translate("About") }}' },
+            { path: '/contact/', title: '{{ "navigation.contact" | translate("Contact") }}' }
         ];
         
         // Find similar paths

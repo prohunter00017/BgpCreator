@@ -350,10 +350,6 @@ footer a:hover {
   background: var(--brand-2);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0,0,0,.7);
-  top: auto;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
 }
 
 .skip-link:focus {

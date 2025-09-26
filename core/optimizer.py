@@ -84,10 +84,10 @@ class ImageOptimizer:
         os.makedirs(self.output_dir, exist_ok=True)
         
         # Define image processing tasks that can be parallelized
+        # IMPORTANT: Removed game_logo from parallel tasks to process it separately after
         image_tasks = [
             ('hero_images', self._optimize_hero_images),
             ('favicon', self._optimize_favicon),
-            ('game_logo', self._optimize_game_logo),
             ('og_images', self._generate_og_images),
             ('pwa_icons', self._generate_pwa_icons),
             ('pwa_screenshots', self._generate_pwa_screenshots),
@@ -96,6 +96,10 @@ class ImageOptimizer:
         
         # Execute image processing tasks in parallel
         processed_count = self._execute_parallel_image_tasks(image_tasks)
+        
+        # CRITICAL FIX: Process game logo AFTER parallel tasks to ensure it's not overwritten
+        # This ensures gamelogo.webp is saved to /assets/images/ after AssetManager runs
+        processed_count += self._optimize_game_logo()
         
         # Calculate and log performance metrics
         optimization_duration = logger.stop_timing(optimization_timer)
@@ -179,9 +183,9 @@ class ImageOptimizer:
             config_path = abs_path("seo_config.json")
             with open(config_path, 'r', encoding='utf-8') as f:
                 config = json.load(f)
-                return config.get("site_name", "Space Waves Pro")
+                return config.get("site_name", "Gaming Site")
         except (FileNotFoundError, json.JSONDecodeError):
-            return "Space Waves Pro"
+            return "Gaming Site"
     
     def _get_seo_filename(self):
         """Get SEO filename from config.py"""
@@ -189,7 +193,7 @@ class ImageOptimizer:
             from . import settings as simple_config
             return simple_config.SEO_FILENAME
         except (ImportError, AttributeError):
-            return "space-waves-pro"
+            return "game"
     
     def _optimize_favicon(self):
         """Generate favicon in multiple sizes with organized structure"""
@@ -320,7 +324,14 @@ class ImageOptimizer:
                 root_logo_path = os.path.join(self.output_dir, logo_filename)
                 resized.save(root_logo_path, "WEBP", quality=90, optimize=True)
                 
+                # IMPORTANT: Save as gamelogo.webp in /assets/images/ for HTML references
+                images_dir = os.path.join(self.output_dir, "assets", "images")
+                os.makedirs(images_dir, exist_ok=True)
+                standard_logo_path = os.path.join(images_dir, "gamelogo.webp")
+                resized.save(standard_logo_path, "WEBP", quality=90, optimize=True)
+                
                 print(f"  ✅ Generated game logo: {logo_filename} (also in /assets/images/logos/)")
+                print(f"  ✅ Saved standard gamelogo.webp in /assets/images/ for HTML references")
                 
                 # Register the source image as processed to avoid duplication by AssetManager
                 if self.build_cache:

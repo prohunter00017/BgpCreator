@@ -28,13 +28,13 @@
   <meta property="og:title" content="{{ page_title }} – {{ site_name }}">
   <meta property="og:description" content="{{ page_description }}">
   <meta property="og:url" content="{{ canonical_url }}">
-  <meta property="og:image" content="{{ site_url }}{{ og_image }}">
+  <meta property="og:image" content="{{ site_url.rstrip('/') }}{{ og_image }}">
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{{ page_title }} – {{ site_name }}">
   <meta name="twitter:description" content="{{ page_description }}">
-  <meta name="twitter:image" content="{{ site_url }}{{ og_image }}">
+  <meta name="twitter:image" content="{{ site_url.rstrip('/') }}{{ og_image }}">
 
   <link rel="manifest" href="/site.webmanifest">
   <meta name="theme-color" content="{{ theme_color }}">
@@ -96,9 +96,8 @@
     <div class="container">
       <div class="header-inner">
         <!-- Logo -->
-        <a href="{% if current_page == 'index' %}{{ site_url.rstrip('/') }}{% else %}/index.html{% endif %}" class="logo" {% if current_page == 'index' %}aria-current="page"{% endif %}>
-          <img src="/logo.png" alt="{{ site_name }}">
-          <span class="logo-text">{{ site_name }}</span>
+        <a href="/" class="logo" {% if current_page == 'index' %}aria-current="page"{% endif %}>
+          <img src="/logo.png" alt="{{ logo_seo_attributes.alt }}" title="{{ logo_seo_attributes.title }}">
         </a>
         
         <!-- Mobile Menu Toggle -->
@@ -134,7 +133,7 @@
     </small>
   </footer>
   
-  <!-- escaperoad.io back-to-top button -->
+  <!-- Back to top button -->
   <button class="back-to-top" id="backToTop" aria-label="Back to top" title="Back to top">
     ↑
   </button>
@@ -173,7 +172,7 @@
     }
 
 
-    // escaperoad.io back-to-top button functionality
+    // Back-to-top button functionality
     const backToTop = document.getElementById('backToTop');
     if(backToTop) {
       window.addEventListener('scroll', () => {

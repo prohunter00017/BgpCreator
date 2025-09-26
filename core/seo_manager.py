@@ -10,6 +10,7 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
+from .url_utils import URLBuilder
 
 
 class SEOManager:
@@ -19,6 +20,7 @@ class SEOManager:
         self.site_url = site_url.rstrip('/') + '/'
         self.site_name = site_name
         self.output_dir = output_dir
+        self.url_builder = URLBuilder(site_url)
     
     def create_robots_txt(self, sitemap_url: Optional[str] = None) -> None:
         """
@@ -33,7 +35,7 @@ class SEOManager:
             "",
             "# Crawl-delay: 1",
             "",
-            f"Sitemap: {sitemap_url or f'{self.site_url}sitemap.xml'}"
+            f"Sitemap: {sitemap_url or self.url_builder.get_canonical_url('sitemap.xml')}"
         ]
         
         robots_path = os.path.join(self.output_dir, "robots.txt")
@@ -59,10 +61,10 @@ class SEOManager:
         for page in pages:
             url = ET.SubElement(urlset, 'url')
             
-            # Build full URL
+            # Build full URL using URLBuilder
             page_url = page.get('url', '')
             if not page_url.startswith('http'):
-                page_url = f"{self.site_url}{page_url.lstrip('/')}"
+                page_url = self.url_builder.get_canonical_url(page_url)
             
             ET.SubElement(url, 'loc').text = page_url
             ET.SubElement(url, 'changefreq').text = page.get('changefreq', 'monthly')
@@ -73,7 +75,7 @@ class SEOManager:
         if games:
             for game in games:
                 url = ET.SubElement(urlset, 'url')
-                game_url = f"{self.site_url}games/{game['slug']}.html"
+                game_url = self.url_builder.get_canonical_url(f"games/{game['slug']}")
                 ET.SubElement(url, 'loc').text = game_url
                 ET.SubElement(url, 'changefreq').text = 'weekly'
                 ET.SubElement(url, 'priority').text = '0.8'
@@ -128,7 +130,7 @@ class SEOManager:
         icons = []
         for size in sizes:
             icons.append({
-                "src": f"/assets/pwa/{seo_filename}-icon-{size}.png",
+                "src": self.url_builder.normalize_asset_path(f"/assets/pwa/{seo_filename}-icon-{size}.png"),
                 "sizes": size,
                 "type": "image/png",
                 "purpose": "any"
@@ -137,7 +139,7 @@ class SEOManager:
         # Add maskable icons
         for size in ["192x192", "512x512"]:
             icons.append({
-                "src": f"/assets/pwa/{seo_filename}-icon-{size}-maskable.png",
+                "src": self.url_builder.normalize_asset_path(f"/assets/pwa/{seo_filename}-icon-{size}-maskable.png"),
                 "sizes": size,
                 "type": "image/png",
                 "purpose": "maskable"
@@ -149,21 +151,21 @@ class SEOManager:
         """Generate screenshot list for manifest"""
         return [
             {
-                "src": f"/assets/pwa/{seo_filename}-screenshot-mobile.png",
+                "src": self.url_builder.normalize_asset_path(f"/assets/pwa/{seo_filename}-screenshot-mobile.png"),
                 "sizes": "390x844",
                 "type": "image/png",
                 "form_factor": "narrow",
                 "label": "Mobile view"
             },
             {
-                "src": f"/assets/pwa/{seo_filename}-screenshot-tablet.png",
+                "src": self.url_builder.normalize_asset_path(f"/assets/pwa/{seo_filename}-screenshot-tablet.png"),
                 "sizes": "768x1024",
                 "type": "image/png",
                 "form_factor": "wide",
                 "label": "Tablet view"
             },
             {
-                "src": f"/assets/pwa/{seo_filename}-screenshot-desktop.png",
+                "src": self.url_builder.normalize_asset_path(f"/assets/pwa/{seo_filename}-screenshot-desktop.png"),
                 "sizes": "1280x720",
                 "type": "image/png",
                 "form_factor": "wide",
@@ -192,9 +194,9 @@ class SEOManager:
             if crumb.get("url") is not None:
                 url = crumb['url']
                 if url == "" or url == "/":
-                    item["item"] = self.site_url.rstrip('/')
+                    item["item"] = self.url_builder.get_canonical_url("")
                 else:
-                    item["item"] = f"{self.site_url.rstrip('/')}/{url.lstrip('/')}"
+                    item["item"] = self.url_builder.get_canonical_url(url)
             
             items.append(item)
         
@@ -225,7 +227,7 @@ class SEOManager:
             "email": support_email,
             "logo": {
                 "@type": "ImageObject",
-                "url": logo_url or f"{self.site_url}logo.png",
+                "url": logo_url or self.url_builder.get_og_image_url("logo.png"),
                 "width": 1024,
                 "height": 1024
             }
@@ -289,9 +291,9 @@ class SEOManager:
         return {
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            "@id": f"{self.site_url}games/{game_slug}.html#software",
+            "@id": self.url_builder.get_canonical_url(f"games/{game_slug}") + "#software",
             "name": game_title,
-            "url": f"{self.site_url}games/{game_slug}.html",
+            "url": self.url_builder.get_canonical_url(f"games/{game_slug}"),
             "description": game_description or f"Play {game_title} free online - {self.site_name}",
             "applicationCategory": "GameApplication",
             "operatingSystem": "Web Browser",

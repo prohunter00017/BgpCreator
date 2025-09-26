@@ -131,6 +131,29 @@ COMPANY_ADDRESS = {
 }
 
 # =============================================================================
+# RATING SETTINGS (for structured data)
+# =============================================================================
+
+# App/Game rating configuration for SEO structured data
+APP_RATING = {
+    "rating_value": "4.5",        # Current rating (1-5)
+    "best_rating": "5",           # Maximum possible rating
+    "worst_rating": "1",          # Minimum possible rating
+    "rating_count": "1250"        # Number of ratings/reviews
+}
+
+# =============================================================================
+# VISUAL THEME SETTINGS
+# =============================================================================
+
+# Color palette (1-4):
+# 1 = Dark Ocean (deep blue with cyan accents)
+# 2 = Neon Purple (cyberpunk purple with electric accents)  
+# 3 = Forest Green (natural green with earth tones)
+# 4 = Fire Orange (warm orange with energy accents)
+COLOR_PALETTE = 1
+
+# =============================================================================
 # ADVANCED SETTINGS (usually don't need to change)
 # =============================================================================
 
@@ -161,37 +184,37 @@ SITE_PAGES = [
         "changefreq": "daily"
     },  # Homepage
     {
-        "url": "pages/about-us.html",
+        "url": "about-us/",
         "priority": "0.8",
         "changefreq": "monthly"
     },
     {
-        "url": "pages/contact.html",
+        "url": "contact/",
         "priority": "0.7",
         "changefreq": "monthly"
     },
     {
-        "url": "legal/privacy-policy.html",
+        "url": "privacy-policy/",
         "priority": "0.5",
         "changefreq": "yearly"
     },
     {
-        "url": "legal/terms-of-service.html",
+        "url": "terms-of-service/",
         "priority": "0.5",
         "changefreq": "yearly"
     },
     {
-        "url": "legal/cookies-policy.html",
+        "url": "cookies-policy/",
         "priority": "0.5",
         "changefreq": "yearly"
     },
     {
-        "url": "legal/dmca.html",
+        "url": "dmca/",
         "priority": "0.3",
         "changefreq": "yearly"
     },
     {
-        "url": "legal/parents-information.html",
+        "url": "parents-information/",
         "priority": "0.6",
         "changefreq": "monthly"
     }

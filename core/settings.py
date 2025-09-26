@@ -26,7 +26,7 @@ CONTACT_PHONE = "+1-555-123-4567"
 GOOGLE_ANALYTICS_ID = "G-FGRWDEFQY4"
 
 # =============================================================================
-# CSS THEME SETTINGS - Dark Theme matching escaperoad.io
+# CSS THEME SETTINGS - Dark Theme
 # =============================================================================
 
 CSS_BG = "#000000"

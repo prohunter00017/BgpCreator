@@ -184,7 +184,7 @@ class GameManager:
             
             result.append({
                 "title": g.get("title", "Untitled Game"),
-                "url": f"/games/{g.get('slug')}.html",
+                "url": f"/games/{g.get('slug')}/",
                 "image": image_path
             })
         
@@ -231,7 +231,7 @@ class GameManager:
             
             result.append({
                 "title": g.get("title", "Untitled Game"),
-                "url": f"/games/{g.get('slug')}.html",
+                "url": f"/games/{g.get('slug')}/",
                 "image": image_path
             })
         

@@ -10,32 +10,52 @@ It only provides the essential functionality needed by generate_site.py
 import json
 import os
 from datetime import datetime
+from typing import Optional
+from .url_utils import URLBuilder
 
 class SiteConfig:
-    def __init__(self, language_code="en-US"):
+    def __init__(self, language_code="en-US", site: Optional[str] = None):
         # Initialize cross-platform path handling
         self.static_dir = None
-        # Import from the simple config if available
-        try:
-            from . import settings as simple_config
-            self._site_name = simple_config.SITE_NAME
-            self.site_url = simple_config.SITE_URL
-            self.site_domain = simple_config.SITE_DOMAIN
-            self.game_embed_url = simple_config.GAME_EMBED_URL
-            self.google_analytics_id = simple_config.GOOGLE_ANALYTICS_ID
-            self.seo_filename = simple_config.SEO_FILENAME
-        except ImportError:
-            # Fallback defaults
-            self._site_name = "Slither Io"
-            self.site_url = "https://slitheriofree.net/"
-            self.site_domain = "slitheriofree.net"
-            self.game_embed_url = "https://gulper.io/"
-            self.google_analytics_id = "G-FGRWDEFQY4"
-            self.seo_filename = "slither-io"
+        self._current_site = site
+        
+        # Load site-specific settings if site is provided
+        if site:
+            from .site_loader import load_site_settings, get_site_paths
+            self._settings = load_site_settings(site)
+            site_paths = get_site_paths(site)
+            self.static_dir = site_paths["static_dir"]
+        else:
+            # Fallback to core settings
+            try:
+                from . import settings as simple_config
+                self._settings = simple_config
+            except ImportError:
+                self._settings = None
+        
+        # Initialize properties from loaded settings with generic fallbacks
+        if self._settings:
+            self._site_name = getattr(self._settings, 'SITE_NAME', "Gaming Site")
+            self.site_url = getattr(self._settings, 'SITE_URL', "https://example.com/")
+            self.site_domain = getattr(self._settings, 'SITE_DOMAIN', "example.com")
+            self.game_embed_url = getattr(self._settings, 'GAME_EMBED_URL', "https://example.com/game")
+            self.google_analytics_id = getattr(self._settings, 'GOOGLE_ANALYTICS_ID', "")
+            self.seo_filename = getattr(self._settings, 'SEO_FILENAME', "game")
+        else:
+            # Default fallback - generic gaming site
+            self._site_name = "Gaming Site"
+            self.site_url = "https://example.com/"
+            self.site_domain = "example.com"
+            self.game_embed_url = "https://example.com/game"
+            self.google_analytics_id = ""
+            self.seo_filename = "game"
         
         self.language = language_code
         self.current_year = datetime.now().year
         self.support_email = f"support@{self.site_domain}"
+        
+        # Initialize URLBuilder
+        self.url_builder = URLBuilder(self.site_url)
         
         # Minimal required properties
         self.language_config = {}
@@ -63,7 +83,8 @@ class SiteConfig:
 
         # Defaults
         page_title = page_key.title()
-        canonical_url = f"{self.site_url}{page_key}.html"  # Will be overridden in _generate_page for organized structure
+        # Use URLBuilder for canonical URLs
+        canonical_url = self.url_builder.get_canonical_url(page_key)
         breadcrumbs = [
             {"title": nav_titles["home"], "url": "/"},
             {"title": page_title, "url": None}
@@ -72,7 +93,7 @@ class SiteConfig:
         # Special-case index page: use root canonical and Home label
         if page_key == "index":
             page_title = self.centralized_game_name
-            canonical_url = self.site_url.rstrip('/')
+            canonical_url = self.url_builder.get_canonical_url("")
             breadcrumbs = [
                 {"title": nav_titles["home"], "url": "/"},
                 {"title": nav_titles["home"], "url": None}
@@ -106,7 +127,7 @@ class SiteConfig:
         nav_titles = {"home": "Home", "games": "Games", "about": "About", "contact": "Contact", "privacy": "Privacy"}
         footer_titles = {"privacy": "Privacy Policy", "terms": "Terms of Service", "contact": "Contact", "dmca": "DMCA"}
 
-        # Dark Theme CSS design tokens - matching escaperoad.io
+        # Dark Theme CSS design tokens
         # Try to get from settings first, then use defaults
         try:
             from . import settings as simple_config
@@ -131,8 +152,12 @@ class SiteConfig:
             css_font_family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
             container_max_width = "1400px"
 
+        # Generate logo SEO attributes
+        logo_seo_attributes = self.get_image_seo_attributes('/logo.png', context_type='logo')
+        
         return {
             "site_name": self.site_name,
+            "logo_seo_attributes": logo_seo_attributes,
             "site_url": self.site_url,
             "site_domain": self.site_domain,
             "support_email": self.support_email,
@@ -147,8 +172,8 @@ class SiteConfig:
             "ad_networks": getattr(self, 'ad_networks', {}),
             "ad_sizes": getattr(self, 'ad_sizes', {}),
             "navigation": [
-                {"title": nav_titles["home"], "url": "/index.html", "key": "index"},
-                {"title": nav_titles["games"], "url": "/games.html", "key": "games"},
+                {"title": nav_titles["home"], "url": "/", "key": "index"},
+                {"title": nav_titles["games"], "url": "/games/", "key": "games"},
                 {"title": nav_titles["about"], "url": self._get_about_url(), "key": "about"},
                 {"title": nav_titles["contact"], "url": self._get_contact_url(), "key": "contact"},
                 {"title": nav_titles["privacy"], "url": self._get_privacy_url(), "key": "privacy"}
@@ -157,11 +182,11 @@ class SiteConfig:
                 {"title": footer_titles["privacy"], "url": self._get_privacy_url()},
                 {"title": footer_titles["terms"], "url": self._get_terms_url()},
                 {"title": footer_titles["contact"], "url": self._get_contact_url()},
-                {"title": footer_titles["dmca"], "url": "/legal/dmca.html"}
+                {"title": footer_titles["dmca"], "url": "/dmca/"}
             ],
             "robots_content": "index,follow",
             "og_type": "website",
-            "og_image": f"assets/images/seo/{self.seo_filename}.webp",
+            "og_image": self.url_builder.normalize_asset_path(f"/assets/images/seo/{self.seo_filename}.webp"),
             "theme_color": "#0369a1",
             # CSS tokens for templates
             "css_bg": css_bg,
@@ -179,30 +204,26 @@ class SiteConfig:
         }
     
     def get_dynamic_hero_image(self):
-        """Get hero image filename with correct path - use the same logic as image optimizer"""
-        # The image optimizer uses seo_config fallback, so we need to match that
-        # Until we fully migrate, use the fallback that image_optimizer.py uses
-        try:
-            from . import settings as simple_config
-            return f"/assets/images/seo/{simple_config.SEO_FILENAME}.webp"
-        except (ImportError, AttributeError):
-            return "/assets/images/seo/space-waves-pro.webp"  # Match image optimizer fallback
+        """Get hero image filename with correct path"""
+        # Use configured SEO filename or default
+        seo_filename = self.seo_filename or "default"
+        return f"/assets/images/seo/{seo_filename}.webp"
     
     def _get_about_url(self):
         """Get About page URL - English only"""
-        return "/pages/about-us.html"
+        return "/about-us/"
     
     def _get_contact_url(self):
         """Get Contact page URL - English only"""
-        return "/pages/contact.html"
+        return "/contact/"
     
     def _get_privacy_url(self):
         """Get Privacy page URL - English only"""
-        return "/legal/privacy-policy.html"
+        return "/privacy-policy/"
     
     def _get_terms_url(self):
         """Get Terms page URL - English only"""
-        return "/legal/terms-of-service.html"
+        return "/terms-of-service/"
     
     def update_site_url(self, new_url):
         """Update site URL"""
@@ -211,24 +232,22 @@ class SiteConfig:
         self.site_url = new_url.rstrip('/') + '/'
         self.site_domain = self.site_url.split('://')[1].split('/')[0]
         self.support_email = f"support@{self.site_domain}"
+        # Update URLBuilder with new site URL
+        self.url_builder = URLBuilder(self.site_url)
         print(f"✅ Updated site URL to: {self.site_url}")
     
     # Additional properties needed by generate_site.py
     @property
     def centralized_description(self):
-        try:
-            from . import settings as simple_config
-            return getattr(simple_config, 'INDEX_DESCRIPTION', f"Play {self.site_name} free online!")
-        except (ImportError, AttributeError):
-            return f"Play {self.site_name} free online!"
+        if self._settings:
+            return getattr(self._settings, 'INDEX_DESCRIPTION', f"Play {self.site_name} free online!")
+        return f"Play {self.site_name} free online!"
     
     @property 
     def centralized_game_name(self):
-        try:
-            from . import settings as simple_config
-            return simple_config.INDEX_TITLE
-        except (ImportError, AttributeError):
-            return self.site_name
+        if self._settings:
+            return getattr(self._settings, 'INDEX_TITLE', self.site_name)
+        return self.site_name
     
     @property
     def site_name(self):
@@ -263,11 +282,10 @@ class SiteConfig:
             item = {"@type": "ListItem", "position": i + 1, "name": crumb["title"]}
             if crumb.get("url") is not None:
                 if crumb["url"] == "":
-                    item["item"] = self.site_url.rstrip('/')
+                    item["item"] = self.url_builder.get_canonical_url("")
                 else:
-                    # Normalize URL concatenation to avoid double slashes
-                    url = crumb['url']
-                    item["item"] = f"{self.site_url.rstrip('/')}/{url.lstrip('/')}"
+                    # Use URLBuilder to ensure consistent URLs
+                    item["item"] = self.url_builder.get_canonical_url(crumb['url'])
             items.append(item)
         
         return {
@@ -317,10 +335,10 @@ class SiteConfig:
                 "mainEntity": [
                     {
                         "@type": "Question",
-                        "name": "How do I play Slither Io?",
+                        "name": "How do I play this game?",
                         "acceptedAnswer": {
                             "@type": "Answer",
-                            "text": "Control your snake with mouse movements and use boost to grow faster by eating pellets and avoiding other snakes."
+                            "text": "Follow the game instructions and controls displayed on the screen to play."
                         }
                     }
                 ]
@@ -331,48 +349,92 @@ class SiteConfig:
         return f"Learn more about {title} - {self.site_name}"
     
     def get_organization_schema(self):
-        """Get Organization schema for SEO"""
-        return {
+        """Get Organization schema for SEO with social media and company info"""
+        schema = {
             "@context": "https://schema.org",
             "@type": "Organization",
-            "@id": f"{self.site_url}#organization",
+            "@id": self.url_builder.get_canonical_url("") + "#organization",
             "name": self.site_name,
-            "url": self.site_url,
+            "url": self.url_builder.get_canonical_url(""),
             "description": self.centralized_description,
             "email": self.support_email,
             "logo": {
                 "@type": "ImageObject",
-                "url": f"{self.site_url}logo.png",
+                "url": self.url_builder.get_og_image_url("logo.png"),
                 "width": 1024,
                 "height": 1024
-            },
-            "sameAs": [
-                f"{self.site_url.rstrip('/')}{self._get_about_url()}"
-            ]
+            }
         }
+        
+        # Add social media links if available
+        same_as = []
+        if self._settings and hasattr(self._settings, 'SOCIAL_MEDIA'):
+            social = self._settings.SOCIAL_MEDIA
+            if social.get('facebook'):
+                same_as.append(social['facebook'])
+            if social.get('twitter'):
+                same_as.append(social['twitter'])
+            if social.get('youtube'):
+                same_as.append(social['youtube'])
+        
+        # Don't include internal pages in sameAs - only external social profiles
+        
+        if same_as:
+            schema["sameAs"] = same_as
+        
+        # Add founder info if available
+        if self._settings and hasattr(self._settings, 'FOUNDER_INFO'):
+            founder = self._settings.FOUNDER_INFO
+            if founder.get('name'):
+                schema["founder"] = {
+                    "@type": "Person",
+                    "name": founder['name'],
+                    "jobTitle": founder.get('job_title', 'Founder')
+                }
+                # Add founder social links if present
+                if founder.get('twitter'):
+                    schema["founder"]["sameAs"] = [founder['twitter']]
+                    if founder.get('linkedin'):
+                        schema["founder"]["sameAs"].append(founder['linkedin'])
+                elif founder.get('linkedin'):
+                    schema["founder"]["sameAs"] = [founder['linkedin']]
+        
+        # Add company address if available
+        if self._settings and hasattr(self._settings, 'COMPANY_ADDRESS'):
+            address = self._settings.COMPANY_ADDRESS
+            if address.get('street'):
+                schema["address"] = {
+                    "@type": "PostalAddress",
+                    "streetAddress": address['street'],
+                    "addressLocality": address.get('city', ''),
+                    "postalCode": address.get('postal_code', ''),
+                    "addressCountry": address.get('country', 'US')
+                }
+        
+        return schema
     
     def get_website_schema(self):
         """Get WebSite schema for SEO"""
         return {
             "@context": "https://schema.org",
             "@type": "WebSite",
-            "@id": f"{self.site_url}#website",
+            "@id": self.url_builder.get_canonical_url("") + "#website",
             "name": self.site_name,
-            "url": self.site_url,
+            "url": self.url_builder.get_canonical_url(""),
             "description": self.centralized_description,
             "publisher": {
-                "@id": f"{self.site_url}#organization"
+                "@id": self.url_builder.get_canonical_url("") + "#organization"
             }
         }
     
     def get_software_application_schema(self):
-        """Get SoftwareApplication schema for INDEX page only"""
-        return {
+        """Get SoftwareApplication schema for INDEX page only with app store links"""
+        schema = {
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            "@id": f"{self.site_url}#software",
+            "@id": self.url_builder.get_canonical_url("") + "#software",
             "name": self.centralized_game_name,
-            "url": self.site_url,
+            "url": self.url_builder.get_canonical_url(""),
             "description": self.centralized_description,
             "applicationCategory": "GameApplication",
             "operatingSystem": "Web Browser",
@@ -382,14 +444,60 @@ class SiteConfig:
                 "priceCurrency": "USD",
                 "availability": "https://schema.org/InStock"
             },
-            "aggregateRating": {
+        }
+        
+        # Add rating from settings if available
+        if self._settings and hasattr(self._settings, 'APP_RATING'):
+            rating = self._settings.APP_RATING
+            schema["aggregateRating"] = {
+                "@type": "AggregateRating",
+                "ratingValue": rating.get('rating_value', '4.5'),
+                "bestRating": rating.get('best_rating', '5'),
+                "ratingCount": rating.get('rating_count', '1250'),
+                "worstRating": rating.get('worst_rating', '1')
+            }
+        else:
+            # Default rating if not configured
+            schema["aggregateRating"] = {
                 "@type": "AggregateRating",
                 "ratingValue": "4.5",
                 "bestRating": "5",
                 "ratingCount": "1250",
                 "worstRating": "1"
             }
+        
+        # Add app store links if available
+        install_targets = []
+        if self._settings and hasattr(self._settings, 'SOCIAL_MEDIA'):
+            social = self._settings.SOCIAL_MEDIA
+            if social.get('app_store'):
+                install_targets.append({
+                    "@type": "EntryPoint",
+                    "urlTemplate": social['app_store'],
+                    "actionPlatform": "http://schema.org/IOSPlatform",
+                    "name": "Download on App Store"
+                })
+            if social.get('play_store'):
+                install_targets.append({
+                    "@type": "EntryPoint",
+                    "urlTemplate": social['play_store'],
+                    "actionPlatform": "http://schema.org/AndroidPlatform", 
+                    "name": "Get it on Google Play"
+                })
+        
+        if install_targets:
+            schema["potentialAction"] = {
+                "@type": "InstallAction",
+                "target": install_targets
+            }
+        
+        # Add publisher (organization)
+        schema["publisher"] = {
+            "@type": "Organization",
+            "@id": self.url_builder.get_canonical_url("") + "#organization"
         }
+        
+        return schema
     
     def get_game_software_application_schema(self, game_title, game_slug, game_description=None, game_rating=None):
         """Get CUSTOM SoftwareApplication schema for individual GAME pages"""
@@ -417,9 +525,9 @@ class SiteConfig:
         return {
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            "@id": f"{self.site_url}{game_slug}.html#software",
+            "@id": self.url_builder.get_canonical_url(f"games/{game_slug}") + "#software",
             "name": game_title,
-            "url": f"{self.site_url}{game_slug}.html",
+            "url": self.url_builder.get_canonical_url(f"games/{game_slug}"),
             "description": game_description or f"Play {game_title} free online - {self.site_name}",
             "applicationCategory": "GameApplication",
             "operatingSystem": "Web Browser",
@@ -438,16 +546,54 @@ class SiteConfig:
             },
             "isPartOf": {
             "@type": "WebSite",
-                "@id": f"{self.site_url}#website"
+                "@id": self.url_builder.get_canonical_url("") + "#website"
             }
         }
     
     
-    def get_image_seo_attributes(self, image_name):
-        """Get image SEO attributes"""
+    def get_image_seo_attributes(self, image_name, context_type=None, game_title=None):
+        """Get image SEO attributes with context-aware alt text
+        
+        Args:
+            image_name: The image filename or path
+            context_type: Type of image (logo, hero, game, screenshot, etc.)
+            game_title: Title of the game if this is a game-specific image
+        """
+        # Generate context-specific alt text
+        if game_title:
+            # Game-specific images
+            if context_type == "hero":
+                alt_text = f"{game_title} game screenshot - Play {game_title} free online on {self.site_name}"
+            elif context_type == "thumbnail":
+                alt_text = f"{game_title} game thumbnail - Free online {game_title} game"
+            elif context_type == "icon":
+                alt_text = f"{game_title} game icon"
+            else:
+                alt_text = f"{game_title} - Play free online game on {self.site_name}"
+        else:
+            # Site-wide images
+            if context_type == "logo":
+                alt_text = f"{self.site_name} logo - Free online games"
+            elif context_type == "hero":
+                alt_text = f"{self.site_name} hero banner - Play free online games"
+            elif context_type == "screenshot":
+                alt_text = f"{self.site_name} website screenshot - Free online gaming platform"
+            elif "favicon" in str(image_name).lower():
+                alt_text = f"{self.site_name} favicon"
+            elif "logo" in str(image_name).lower():
+                alt_text = f"{self.site_name} logo - Free online games"
+            else:
+                alt_text = f"{self.site_name} - Play free online games"
+        
+        # Generate descriptive title
+        if game_title:
+            title_text = f"{game_title} on {self.site_name}"
+        else:
+            title_text = f"{self.site_name} - Free Online Games"
+        
         return {
-            "alt": f"{self.site_name} - Play Free Online",
-            "title": f"{self.site_name}",
+            "alt": alt_text,
+            "title": title_text,
             "loading": "lazy",
             "decoding": "async"
         }
